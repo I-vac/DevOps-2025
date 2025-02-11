@@ -1,0 +1,223 @@
+/* General styles */
+body {
+    background: #CAECE9;
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 14px;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+/* Link styles */
+a {
+    color: #26776F;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    color: #333;
+}
+
+/* Input fields and buttons */
+input[type="text"],
+input[type="password"],
+input[type="submit"] {
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 14px;
+    border-radius: 4px;
+    outline: none;
+}
+
+input[type="text"],
+input[type="password"] {
+    background: #fff;
+    border: 1px solid #BFE6E2;
+    padding: 5px;
+    color: #105751;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+input[type="submit"] {
+    background: #105751;
+    border: 1px solid #073B36;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 8px 15px;
+    transition: background 0.3s ease;
+}
+
+input[type="submit"]:hover {
+    background: #26776F;
+}
+
+/* Page container */
+div.page {
+    background: #fff;
+    border: 1px solid #6ECCC4;
+    width: 90%;
+    max-width: 700px;
+    margin: 30px auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Header styles */
+div.page h1 {
+    background: #6ECCC4;
+    margin: 0;
+    padding: 15px;
+    color: #fff;
+    letter-spacing: 1px;
+    text-shadow: 0 0 3px #24776F;
+    font-weight: normal;
+    font-size: 1.5em;
+    text-align: center;
+}
+
+/* Navigation bar */
+div.page div.navigation {
+    background: #DEE9E8;
+    padding: 10px;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+    text-align: center;
+}
+
+div.page div.navigation a {
+    color: #444;
+    margin: 0 10px;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+div.page div.navigation a:hover {
+    color: #26776F;
+}
+
+/* Heading styles */
+div.page h2 {
+    margin: 20px 0 15px 0;
+    color: #105751;
+    text-shadow: 0 1px 2px #ccc;
+    font-size: 1.4em;
+    text-align: center;
+}
+
+/* Content body */
+div.page div.body {
+    padding: 20px;
+}
+
+/* Footer styles */
+div.page div.footer {
+    background: #eee;
+    color: #888;
+    padding: 10px;
+    font-size: 12px;
+    text-align: center;
+}
+
+/* Follow status box */
+div.page div.followstatus {
+    border: 1px solid #ccc;
+    background: #E3EBEA;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 13px;
+    text-align: center;
+}
+
+/* Messages */
+div.page ul.messages {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+div.page ul.messages li {
+    margin: 10px 0;
+    padding: 10px;
+    background: #F0FAF9;
+    border: 1px solid #DBF3F1;
+    border-radius: 5px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+div.page ul.messages p {
+    margin: 0;
+    flex: 1;
+}
+
+div.page ul.messages li img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+}
+
+div.page ul.messages li small {
+    font-size: 0.9em;
+    color: #888;
+}
+
+/* Twitbox */
+div.page div.twitbox {
+    margin: 20px 0;
+    padding: 10px;
+    background: #F0FAF9;
+    border: 1px solid #94E2DA;
+    border-radius: 5px;
+}
+
+div.page div.twitbox h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+    color: #2C7E76;
+    text-align: center;
+}
+
+div.page div.twitbox input[type="text"] {
+    width: calc(100% - 100px);
+    display: inline-block;
+    margin-right: 5px;
+}
+
+div.page div.twitbox input[type="submit"] {
+    display: inline-block;
+    width: 80px;
+}
+
+/* Flashes */
+ul.flashes {
+    list-style: none;
+    margin: 10px 10px 0 10px;
+    padding: 0;
+}
+
+ul.flashes li {
+    background: #B9F3ED;
+    border: 1px solid #81CEC6;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+/* Error messages */
+div.error {
+    margin: 10px 0;
+    background: #FAE4E4;
+    border: 1px solid #DD6F6F;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 13px;
+    color: #DD0000;
+    text-align: center;
+}
