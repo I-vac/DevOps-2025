@@ -10,7 +10,11 @@ public class Database {
     public static void init() {
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:minitwit.db");
+            String dbPath = System.getenv("DATABASE_URL");
+            if (dbPath == null) {
+                dbPath = "jdbc:sqlite:minitwit.db";
+            }
+            connection = DriverManager.getConnection(dbPath);
             connection.createStatement().execute("PRAGMA foreign_keys = ON");
         } catch (Exception e) {
             e.printStackTrace();

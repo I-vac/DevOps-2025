@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  minitwit:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - minitwit-data:/data
+    environment:
+      - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+    restart: always
+
+volumes:
+  minitwit-data:
+    driver: local
