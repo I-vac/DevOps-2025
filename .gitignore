@@ -1,0 +1,7 @@
+.env
+target/
+__pycache__
+Makefile
+flag_tool.c
+minitwit.py
+minitwit.pyc
