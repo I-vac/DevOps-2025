@@ -2,9 +2,23 @@ version: '3.8'
 
 services:
   minitwit:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "5000:5000"
+    volumes:
+      - minitwit-data:/data
+    environment:
+      - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+    restart: always
+
+  simulator-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "5001:5001"
     volumes:
       - minitwit-data:/data
     environment:

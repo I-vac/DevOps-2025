@@ -10,10 +10,10 @@ FROM openjdk:21-slim
 WORKDIR /app
 RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /app/target/minitwit-java-app.jar app.jar
+COPY --from=build /app/target/minitwit-java-simulator-api.jar app.jar
 COPY src/main/resources/schema.sql /app/schema.sql
 COPY db_init.sh /app/db_init.sh
 RUN chmod +x /app/db_init.sh
 
-EXPOSE 5000
-CMD ["/app/db_init.sh"]
+EXPOSE 5001
+CMD ["java", "-jar", "app.jar"]
