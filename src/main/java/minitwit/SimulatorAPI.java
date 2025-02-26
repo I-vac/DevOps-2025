@@ -1,28 +1,38 @@
 package minitwit;
 
 import static spark.Spark.*;
+import com.google.gson.Gson;
 import spark.Request;
 import spark.Response;
 import java.util.*;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class SimulatorAPI {
+    private static final Gson gson = new Gson();
     private static final int PER_PAGE = 30;
 
     public static void main(String[] args) {
         // Configure SparkJava
         port(5001);
+        staticFiles.location("/public");
+        staticFiles.expireTime(600L);
 
         // Database setup
         Database.init();
 
-        // Session setup
+        // Configure Freemarker
+        TemplateRenderer.configure();
+
+        // Middleware for content-type and authorization
         before((req, res) -> {
-            req.session().maxInactiveInterval(300); // 5 minutes
+            res.type("application/json");
+            String authHeader = req.headers("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Basic ")) {
+                halt(403, gson.toJson(Map.of("error", "Unauthorized")));
+            }
         });
-        
-        // Routes
-        get("/", (req, res) -> {
+
+         get("/", (req, res) -> {
             if (req.session().attribute("user_id") == null) {
                 res.redirect("/public");
                 return null;
@@ -44,59 +54,9 @@ public class SimulatorAPI {
             return TemplateRenderer.render("login", model);
         });
 
-        post("/login", (req, res) -> {
-            String username = req.queryParams("username");
-            String password = req.queryParams("password");
-            Map<String, Object> user = Database.getUserByUsername(username);
-            
-            if (user != null && BCrypt.checkpw(password, (String) user.get("pw_hash"))) {
-                req.session().attribute("user_id", user.get("user_id"));
-                addFlash(req, "You were logged in");
-                res.redirect("/");
-                return null;
-            }
-            
-            Map<String, Object> model = createModel(req);
-            model.put("error", "Invalid username/password");
-            model.put("username", username);
-            return TemplateRenderer.render("login", model);
-        });
-
         get("/register", (req, res) -> {
             Map<String, Object> model = createModel(req);
             return TemplateRenderer.render("register", model);
-        });
-
-        post("/register", (req, res) -> {
-            Map<String, Object> model = createModel(req);
-            String username = req.queryParams("username");
-            String email = req.queryParams("email");
-            String password = req.queryParams("password");
-            String password2 = req.queryParams("password2");
-
-            // Validation
-            if (username == null || username.isEmpty()) {
-                model.put("error", "You have to enter a username");
-            } else if (email == null || !email.contains("@")) {
-                model.put("error", "You have to enter a valid email address");
-            } else if (password == null || password.isEmpty()) {
-                model.put("error", "You have to enter a password");
-            } else if (!password.equals(password2)) {
-                model.put("error", "The two passwords do not match");
-            } else if (Database.getUserByUsername(username) != null) {
-                model.put("error", "The username is already taken");
-            }
-
-            if (model.containsKey("error")) {
-                model.put("username", username);
-                model.put("email", email);
-                return TemplateRenderer.render("register", model);
-            }
-
-            Database.createUser(username, email, BCrypt.hashpw(password, BCrypt.gensalt()));
-            addFlash(req, "You were successfully registered and can login now");
-            res.redirect("/login");
-            return null;
         });
 
         get("/logout", (req, res) -> {
@@ -159,23 +119,142 @@ public class SimulatorAPI {
             return null;
         });
 
-        post("/add_message", (req, res) -> {
-            Integer userId = checkAuthenticated(req);
-            String text = req.queryParams("text");
-            
-            if (text != null && !text.trim().isEmpty()) {
-                Database.createMessage(userId, text.trim(), System.currentTimeMillis() / 1000);
-                addFlash(req, "Your message was recorded");
+        // Register endpoint
+        post("/register", (req, res) -> {
+            Map<String, Object> payload = gson.fromJson(req.body(), Map.class);
+            String username = (String) payload.get("username");
+            String email = (String) payload.get("email");
+            String password = (String) payload.get("pwd");
+
+            if (username == null || email == null || password == null) {
+                res.status(400);
+                return gson.toJson(Map.of("error", "Missing fields"));
             }
-            
-            res.redirect("/");
-            return null;
+
+            if (Database.getUserByUsername(username) != null) {
+                res.status(400);
+                return gson.toJson(Map.of("error", "User already exists"));
+            }
+
+            Database.createUser(username, email, BCrypt.hashpw(password, BCrypt.gensalt()));
+            res.status(204);
+            return "";
         });
 
+        // Post tweet endpoint
+        post("/msgs/:username", (req, res) -> {
+            String username = req.params(":username");
+            Map<String, Object> payload = gson.fromJson(req.body(), Map.class);
+            String content = (String) payload.get("content");
+
+            if (content == null || content.trim().isEmpty()) {
+                res.status(400);
+                return gson.toJson(Map.of("error", "Content cannot be empty"));
+            }
+
+            Map<String, Object> user = Database.getUserByUsername(username);
+            if (user == null) {
+                res.status(404);
+                return gson.toJson(Map.of("error", "User not found"));
+            }
+
+            // Ensure the user exists in the database before allowing to tweet
+            Integer userId = (Integer) user.get("user_id");
+            if (userId == null) {
+                res.status(404);
+                return gson.toJson(Map.of("error", "User ID not found"));
+            }
+
+            Database.createMessage(userId, content, System.currentTimeMillis() / 1000);
+            res.status(204);
+            return "";
+        });
+
+        // Follow endpoint
+        post("/fllws/:username", (req, res) -> {
+            String username = req.params(":username");
+            Map<String, Object> payload = gson.fromJson(req.body(), Map.class);
+            String followUser = (String) payload.get("follow");
+
+            if (followUser == null) {
+                res.status(400);
+                return gson.toJson(Map.of("error", "Follow username required"));
+            }
+
+            Map<String, Object> user = Database.getUserByUsername(username);
+            Map<String, Object> userToFollow = Database.getUserByUsername(followUser);
+
+            if (user == null || userToFollow == null) {
+                res.status(404);
+                return gson.toJson(Map.of("error", "User not found"));
+            }
+
+            Integer userId = (Integer) user.get("user_id");
+            Integer followUserId = (Integer) userToFollow.get("user_id");
+
+            if (userId == null || followUserId == null) {
+                res.status(404);
+                return gson.toJson(Map.of("error", "User ID not found"));
+            }
+
+            Database.followUser(userId, followUserId);
+            res.status(204);
+            return "";
+        });
+
+        // Unfollow endpoint
+        post("/fllws/:username/unfollow", (req, res) -> {
+            String username = req.params(":username");
+            Map<String, Object> payload = gson.fromJson(req.body(), Map.class);
+            String unfollowUser = (String) payload.get("unfollow");
+
+            if (unfollowUser == null) {
+                res.status(400);
+                return gson.toJson(Map.of("error", "Unfollow username required"));
+            }
+
+            Map<String, Object> user = Database.getUserByUsername(username);
+            Map<String, Object> userToUnfollow = Database.getUserByUsername(unfollowUser);
+
+            if (user == null || userToUnfollow == null) {
+                res.status(404);
+                return gson.toJson(Map.of("error", "User not found"));
+            }
+
+            Integer userId = (Integer) user.get("user_id");
+            Integer unfollowUserId = (Integer) userToUnfollow.get("user_id");
+
+            if (userId == null || unfollowUserId == null) {
+                res.status(404);
+                return gson.toJson(Map.of("error", "User ID not found"));
+            }
+
+            Database.unfollowUser(userId, unfollowUserId);
+            res.status(204);
+            return "";
+        });
+
+        // Health check endpoint
+        get("/health", (req, res) -> gson.toJson(Map.of("status", "API running")));
+
+        // Debug endpoint to validate user existence
+        get("/user/:username", (req, res) -> {
+            String username = req.params(":username");
+            Map<String, Object> user = Database.getUserByUsername(username);
+            if (user == null) {
+                res.status(404);
+                return gson.toJson(Map.of("error", "User not found"));
+            }
+            return gson.toJson(user);
+        });
+
+        // Exception handling
         exception(Exception.class, (e, req, res) -> {
             res.status(500);
-            res.body("Internal Server Error: " + e.getMessage());
+            res.body(gson.toJson(Map.of("error", "Unexpected server error", "details", e.getMessage())));
         });
+
+        after((req, res) -> res.type("application/json"));
     }
 
     private static Map<String, Object> createModel(Request req) {
