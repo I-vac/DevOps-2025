@@ -30,7 +30,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/itu-minitwit-app:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/minitwit:latest
 
       - name: Build and push simulator API image
         uses: docker/build-push-action@v6
@@ -38,7 +38,7 @@ jobs:
           context: .
           file: ./Dockerfile.api
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/itu-minitwit-simulator:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/simulator-api:latest
 
       - name: Run Tests
         run: mvn test
