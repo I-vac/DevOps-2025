@@ -1,0 +1,154 @@
+# 📘 ITU-MiniTwit: Project Overview
+
+Welcome to the **ITU-MiniTwit** project! 🚀 This project is a simplified clone of Twitter, developed as part of the ITU DevOps course. It demonstrates modern development practices, including micro-blogging features, CI/CD pipelines, containerization with Docker, and simulator-driven testing.
+
+---
+
+## 📝 **Table of Contents**
+1. [Project Overview](#project-overview)
+2. [Features](#features)
+3. [Architecture](#architecture)
+4. [Setup & Installation](#setup--installation)
+5. [CI/CD Pipeline](#cicd-pipeline)
+6. [Simulator Integration](#simulator-integration)
+7. [Deployment & Releases](#deployment--releases)
+8. [Future Improvements](#future-improvements)
+9. [License](#license)
+
+---
+
+## 🌟 **Project Overview**
+ITU-MiniTwit is a micro-blogging platform that allows users to:
+- Register and manage accounts.
+- Post short messages (tweets).
+- Follow and unfollow other users.
+- View personal and public timelines.
+
+This project includes:
+- A **web application** for user interaction.
+- A **simulator API** to emulate user behavior and load.
+- **CI/CD pipelines** for automated testing, building, and deployment.
+
+---
+
+## ✨ **Features**
+✅ User Registration & Login  
+✅ Secure password hashing with BCrypt  
+✅ Post and view messages  
+✅ Follow/Unfollow users  
+✅ Personal and public timelines  
+✅ Real-time data updates through shared database  
+✅ Full CI/CD pipeline with automated weekly releases  
+
+---
+
+## 🏗️ **Architecture**
+```
++------------------+      +--------------------+
+|   Web App (:5000)| <--> | Shared Database     |
++------------------+      +--------------------+
+         ↑                          ↑
+         |                          |
+         ↓                          ↓
++------------------+      +--------------------+
+|Simulator API (:5001)|   | CI/CD Pipelines     |
++------------------+      +--------------------+
+```
+- **Web App:** User interface to interact with the platform.  
+- **Simulator API:** Simulates user interactions like tweeting and following.  
+- **Database:** Shared SQLite database to synchronize data between the web app and simulator.  
+- **CI/CD Pipelines:** Handles build, test, release, and deployment stages automatically.  
+
+---
+
+## 🖥️ **Setup & Installation**
+### Prerequisites:
+- Docker & Docker Compose  
+- Java 17 & Maven  
+- GitHub account for CI/CD integration  
+
+### 🚀 Quick Start:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/itu-minitwit.git
+   cd itu-minitwit
+   ```
+2. Build and run with Docker Compose:
+   ```bash
+   docker-compose up --build
+   ```
+3. Access the app:
+   - Web Application: [http://localhost:5000](http://localhost:5000)  
+   - Simulator API: [http://localhost:5001](http://localhost:5001)  
+
+---
+
+## 🔄 **CI/CD Pipeline**
+We use **GitHub Actions** for our CI/CD setup. Key stages include:
+- **Build:** Compiles the Java application and builds Docker images.
+- **Test:** Runs unit and integration tests.
+- **Release:** Weekly automatic releases every Friday at 12:00 UTC.
+- **Deploy:** Pushes images to Docker Hub and deploys to production servers.
+
+👉 **Why GitHub Actions?**  
+- Fully integrated with GitHub  
+- Free for public repositories  
+- Extensive community support  
+- Simple YAML configuration  
+
+For detailed pipeline configuration, check out the [`ci-cd.yml`](.github/workflows/ci-cd.yml) file.
+
+---
+
+## 🎮 **Simulator Integration**
+The **Simulator API** runs on port `5001` and interacts with the main application to:
+- Register users  
+- Post messages  
+- Follow and unfollow users  
+
+Why a simulator?  
+✅ Load testing  
+✅ Behavior simulation for active timelines  
+✅ Real-time monitoring via the web interface  
+
+---
+
+## 🚢 **Deployment & Releases**
+- **Weekly automated releases** are created on GitHub.  
+- Docker images are pushed to Docker Hub.  
+- Production deployment is automated via SSH and Docker Compose.
+
+### 🔔 Access the latest release:
+[View GitHub Releases](https://github.com/your-username/itu-minitwit/releases)  
+
+---
+<!-- 
+## 📅 **Future Improvements**
+- 🌱 Add integration tests with realistic user data.  
+- 🔒 Improve security with OAuth and CSRF protection.  
+- 📊 Integrate code quality tools like SonarCloud.  
+- 🚀 Set up a staging environment for pre-production testing.  
+- 🔄 Implement rollback mechanisms for failed deployments.  
+
+---
+
+## 📝 **License**
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+--- -->
+
+## 🙌 **Acknowledgments**
+- Developed as part of the **ITU DevOps course**  
+- Special thanks to course instructors and teaching assistants!  
+
+---
+
+## 🚀 **Get Involved!**
+Want to contribute?  
+- Fork the repo  
+- Create a feature branch  
+- Submit a pull request  
+
+Happy coding! 💻🎉
+
+-- readme generated by chat gpt --
