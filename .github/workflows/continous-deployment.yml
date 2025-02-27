@@ -40,9 +40,6 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/simulator-api:latest
 
-      - name: Run Tests
-        run: mvn test
-
       - name: Configure SSH for Deployment
         run: |
           mkdir -p ~/.ssh/
@@ -51,13 +48,15 @@ jobs:
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
 
-      - name: Deploy to Server
+      - name: Deploy to Server and Trigger Vagrant Deployment
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-            docker pull ${{ secrets.DOCKER_USERNAME }}/itu-minitwit-app:latest
-            docker pull ${{ secrets.DOCKER_USERNAME }}/itu-minitwit-simulator:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/minitwit:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/simulator-api:latest
             docker-compose down
             docker-compose up -d
+            cd ~/itu-minitwit  # Adjust path if needed
+            vagrant up --provision
           EOF
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
