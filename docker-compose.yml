@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   minitwit:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: jlang62/minitwit:latest
     ports:
       - "5000:5000"
     volumes:
@@ -14,9 +12,7 @@ services:
     restart: always
 
   simulator-api:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
+    image: jlang62/simulator-api:latest
     ports:
       - "5001:5001"
     volumes:
