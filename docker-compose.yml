@@ -1,14 +1,34 @@
 services:
+  mysql:
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+      args:
+        - MYSQL_DATABASE=${MYSQL_DATABASE}
+        - MYSQL_ALLOW_EMPTY_PASSWORD=${MYSQL_ALLOW_EMPTY_PASSWORD}
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_ALLOW_EMPTY_PASSWORD=${MYSQL_ALLOW_EMPTY_PASSWORD}
+    ports:
+      - "${MYSQL_PORT}:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p$MYSQL_ROOT_PASSWORD"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    restart: always
+
   minitwit:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
       - "5000:5000"
-    volumes:
-      - minitwit-data:/data
     environment:
-      - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+      - DATABASE_URL=jdbc:mysql://mysql:3306/minitwit_db?user=root
+    depends_on:
+      mysql:
+        condition: service_healthy
     restart: always
 
   simulator-api:
@@ -17,12 +37,9 @@ services:
       dockerfile: Dockerfile.api
     ports:
       - "5001:5001"
-    volumes:
-      - minitwit-data:/data
     environment:
-      - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+      - DATABASE_URL=jdbc:mysql://mysql:3306/minitwit_db?user=root
+    depends_on:
+      mysql:
+        condition: service_healthy
     restart: always
-
-volumes:
-  minitwit-data:
-    driver: local

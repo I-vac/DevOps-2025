@@ -3,3 +3,4 @@ minitwit/util/DateUtil.class
 minitwit/App.class
 minitwit/TemplateRenderer.class
 minitwit/Database.class
+minitwit/SimulatorAPI.class

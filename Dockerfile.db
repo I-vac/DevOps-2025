@@ -1,0 +1,13 @@
+FROM mysql:latest
+
+MAINTAINER baeldung.com
+
+ARG MYSQL_DATABASE
+ARG MYSQL_ALLOW_EMPTY_PASSWORD
+
+ENV MYSQL_DATABASE=$MYSQL_DATABASE
+ENV MYSQL_ALLOW_EMPTY_PASSWORD=$MYSQL_ALLOW_EMPTY_PASSWORD
+
+COPY src/main/resources/schema.sql /docker-entrypoint-initdb.d/schema.sql
+
+EXPOSE 3306

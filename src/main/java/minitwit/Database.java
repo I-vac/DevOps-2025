@@ -9,13 +9,12 @@ public class Database {
 
     public static void init() {
         try {
-            Class.forName("org.sqlite.JDBC");
+            Class.forName("com.mysql.cj.jdbc.Driver");
             String dbPath = System.getenv("DATABASE_URL");
             if (dbPath == null) {
-                dbPath = "jdbc:sqlite:minitwit.db";
+                dbPath = "jdbc:mysql://localhost:3306/minitwit?serverTimezone=UTC";
             }
-            connection = DriverManager.getConnection(dbPath);
-            connection.createStatement().execute("PRAGMA foreign_keys = ON");
+            connection = DriverManager.getConnection(dbPath, "root", ""); 
         } catch (Exception e) {
             e.printStackTrace();
         }
