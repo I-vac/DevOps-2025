@@ -119,6 +119,13 @@ public class SimulatorAPI {
             return null;
         });
 
+        // Endpoint to get the latest processed simulation action ID from the database
+        get("/latest", (req, res) -> {
+            List<Map<String, Object>> result = Database.query("SELECT MAX(message_id) AS latest FROM message");
+            int latestProcessedCommandId = result.isEmpty() || result.get(0).get("latest") == null ? -1 : (int) result.get(0).get("latest");
+            return gson.toJson(Map.of("latest", latestProcessedCommandId));
+        });
+
         // Register endpoint
         post("/register", (req, res) -> {
             Map<String, Object> payload = gson.fromJson(req.body(), Map.class);
