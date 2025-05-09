@@ -42,25 +42,28 @@ jobs:
       - name: Configure SSH for Deployment
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
+          # use printf so we don't mangle newlines or backslashes
+          printf "%s" "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Deploy to Server and Trigger Vagrant Deployment
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-            echo "Pulling latest Docker images..."
+          ssh -i ~/.ssh/id_ed25519 \
+              -o StrictHostKeyChecking=no \
+              -T \
+              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            echo "Pulling latest Docker images…"
             docker pull ${{ secrets.DOCKER_USERNAME }}/minitwit:latest
             docker pull ${{ secrets.DOCKER_USERNAME }}/simulator-api:latest
 
-            echo "Stopping running containers..."
+            echo "Stopping running containers…"
             docker-compose down
 
-            echo "Starting new deployment..."
+            echo "Starting new deployment…"
             docker-compose up -d
 
-            echo "Triggering Vagrant to provision DigitalOcean VM..."
-            cd ~/itu-minitwit  # Adjust path if needed
+            echo "Triggering Vagrant to provision DigitalOcean VM…"
+            cd ~/itu-minitwit  # adjust path if needed
             vagrant up --provision
           EOF
