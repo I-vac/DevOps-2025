@@ -5,7 +5,6 @@ on:
     branches:
       - main
   workflow_dispatch:
-    manual: true
 
 jobs:
   build:
@@ -42,17 +41,15 @@ jobs:
 
       - name: Configure SSH for Deployment
         run: |
-          mkdir -p ~/.ssh/
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-        env:
-          SSH_KEY: ${{ secrets.SSH_KEY }}
-
 
       - name: Deploy to Server and Trigger Vagrant Deployment
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
             echo "Pulling latest Docker images..."
             docker pull ${{ secrets.DOCKER_USERNAME }}/minitwit:latest
             docker pull ${{ secrets.DOCKER_USERNAME }}/simulator-api:latest
@@ -67,6 +64,3 @@ jobs:
             cd ~/itu-minitwit  # Adjust path if needed
             vagrant up --provision
           EOF
-        env:
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
