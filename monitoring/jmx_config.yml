@@ -1,6 +1,0 @@
-lowercaseOutputName: true
-lowercaseOutputLabelNames: true
-
-rules:
-  # collect everything – feel free to tighten this up later
-  - pattern: ".*"
