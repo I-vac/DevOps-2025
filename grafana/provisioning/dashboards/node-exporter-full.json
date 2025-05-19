@@ -65,7 +65,7 @@
             "rgba(237, 129, 40, 0.89)",
             "rgba(245, 54, 54, 0.9)"
           ],
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": null,
           "description": "Busy state of all CPU cores together",
           "format": "percent",
@@ -144,7 +144,7 @@
             "rgba(237, 129, 40, 0.89)",
             "rgba(245, 54, 54, 0.9)"
           ],
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 0,
           "description": "Used RAM Memory without swap and cache",
           "format": "percent",
@@ -221,7 +221,7 @@
             "rgba(237, 129, 40, 0.89)",
             "rgba(245, 54, 54, 0.9)"
           ],
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": null,
           "description": "Used Swap",
           "format": "percent",
@@ -298,7 +298,7 @@
             "rgba(237, 129, 40, 0.89)",
             "rgba(245, 54, 54, 0.9)"
           ],
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": null,
           "description": "Busy state of all CPU cores together (1 min average)",
           "format": "percent",
@@ -394,7 +394,7 @@
             "trans_errs_lo": "#890F02"
           },
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "description": "Basic network info per interface.",
           "fill": 3,
           "id": 74,
@@ -503,7 +503,7 @@
             "rgba(237, 129, 40, 0.89)",
             "rgba(50, 172, 45, 0.97)"
           ],
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "description": "Total number of CPU cores",
           "format": "none",
           "gauge": {
@@ -579,7 +579,7 @@
             "rgba(237, 129, 40, 0.89)",
             "rgba(50, 172, 45, 0.97)"
           ],
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 2,
           "description": "Total RAM",
           "format": "bytes",
@@ -656,7 +656,7 @@
             "rgba(237, 129, 40, 0.89)",
             "rgba(50, 172, 45, 0.97)"
           ],
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 2,
           "description": "Total SWAP",
           "format": "bytes",
@@ -733,7 +733,7 @@
             "rgba(237, 129, 40, 0.89)",
             "rgba(50, 172, 45, 0.97)"
           ],
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 2,
           "description": "System Load (1m avg)",
           "format": "none",
@@ -811,7 +811,7 @@
             "rgba(237, 129, 40, 0.89)",
             "rgba(50, 172, 45, 0.97)"
           ],
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 1,
           "description": "System uptime",
           "format": "s",
@@ -889,7 +889,7 @@
             "rgba(237, 129, 40, 0.89)",
             "rgba(245, 54, 54, 0.9)"
           ],
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": null,
           "description": "Used RootFS",
           "format": "percent",
@@ -986,7 +986,7 @@
             "user": "#5195CE"
           },
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 2,
           "description": "Basic CPU info",
           "fill": 4,
@@ -1093,7 +1093,7 @@
             "Unused": "#EAB839"
           },
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 2,
           "description": "Basic memory usage",
           "fill": 4,
@@ -1341,7 +1341,7 @@
             "user": "#5195CE"
           },
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 2,
           "description": "CPU info",
           "fill": 3,
@@ -1499,7 +1499,7 @@
             "Unused - Free memory unasigned": "#052B51"
           },
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 2,
           "description": "Memory Stack",
           "fill": 3,
@@ -1765,7 +1765,7 @@
             "trans_errs_lo": "#890F02"
           },
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "description": "Network info. Need to fix https://github.com/grafana/grafana/issues/1271",
           "fill": 3,
           "id": 59,
@@ -1897,7 +1897,7 @@
             "io time": "#890F02"
           },
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 3,
           "description": "Need to fix https://github.com/grafana/grafana/issues/1271",
           "fill": 3,
@@ -2001,7 +2001,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 3,
           "description": "Disk space used of all filesystems mounted",
           "fill": 1,
@@ -2110,7 +2110,7 @@
             "Unused": "#EAB839"
           },
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 2,
           "fill": 1,
           "id": 79,
@@ -2299,7 +2299,7 @@
             "VmallocUsed": "#EA6460"
           },
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 2,
           "fill": 1,
           "id": 46,
@@ -2452,7 +2452,7 @@
             "VmallocUsed": "#EA6460"
           },
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 2,
           "fill": 1,
           "id": 47,
@@ -2614,7 +2614,7 @@
             "VmallocUsed": "#EA6460"
           },
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 2,
           "fill": 1,
           "id": 70,
@@ -2707,7 +2707,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "id": 22,
           "legend": {
@@ -2812,7 +2812,7 @@
             "VmallocUsed": "#EA6460"
           },
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 2,
           "fill": 1,
           "id": 71,
@@ -2933,7 +2933,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "id": 8,
           "legend": {
@@ -3020,7 +3020,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "id": 64,
           "legend": {
@@ -3101,7 +3101,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "id": 62,
           "legend": {
@@ -3193,7 +3193,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "id": 65,
           "legend": {
@@ -3281,7 +3281,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "id": 7,
           "legend": {
@@ -3380,7 +3380,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "description": "The total number of bytes read / write successfully.",
           "fill": 2,
           "id": 33,
@@ -3468,7 +3468,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "description": "The total number of reads / writes completed successfully.",
           "fill": 2,
           "id": 9,
@@ -3557,7 +3557,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "description": "The weighted # of milliseconds spent doing I/Os. This field is incremented at each I/O start, I/O completion, I/O  merge, or read of these stats by the number of I/Os in progress times the number of milliseconds spent doing I/O since the last update of this field. This can provide an easy measure of both I/O completion time and the backlog that may be accumulating.",
           "fill": 3,
           "id": 35,
@@ -3635,7 +3635,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "description": "The total number of milliseconds spent by all reads / writes.",
           "fill": 3,
           "id": 37,
@@ -3727,7 +3727,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "description": "The number of I/Os currently in progress.",
           "fill": 3,
           "id": 34,
@@ -3805,7 +3805,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "description": "The total number of reads / writes completed successfully and the number of reads merged. See https://www.kernel.org/doc/Documentation/iostats.txt.",
           "fill": 2,
           "id": 38,
@@ -3915,7 +3915,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "description": "Milliseconds spent doing I/Os.",
           "fill": 3,
           "id": 36,
@@ -3993,7 +3993,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "description": "1 if there was an error opening or reading a file, 0 otherwise",
           "fill": 2,
           "id": 66,
@@ -4068,7 +4068,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "description": "The total number of sectors read successfully.",
           "fill": 2,
           "id": 80,
@@ -4168,7 +4168,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 3,
           "description": "Filesystem space available to non-root users in bytes. Filesystem free space in bytes. Filesystem read-only status. Filesystem size in bytes.",
           "fill": 1,
@@ -4262,7 +4262,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "description": "Filesystem total file nodes.",
           "fill": 1,
           "id": 41,
@@ -4337,7 +4337,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "description": "File descriptor statistics: allocated.",
           "fill": 1,
           "id": 28,
@@ -4419,7 +4419,7 @@
             "/ ReadOnly": "#890F02"
           },
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "decimals": 0,
           "description": "Filesystem read-only status.",
           "fill": 1,
@@ -4509,7 +4509,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "id": 58,
           "legend": {
@@ -4682,7 +4682,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "id": 60,
           "legend": {
@@ -4767,7 +4767,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "id": 61,
           "legend": {
@@ -4859,7 +4859,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "id": 30,
           "legend": {
@@ -4930,7 +4930,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "height": "",
           "id": 49,
@@ -5077,7 +5077,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "height": "",
           "id": 51,
@@ -5273,7 +5273,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "height": "",
           "id": 81,
@@ -5415,7 +5415,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "id": 63,
           "legend": {
@@ -5589,7 +5589,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "height": "300px",
           "id": 52,
@@ -5705,7 +5705,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "height": "300px",
           "id": 82,
@@ -5846,7 +5846,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "height": "300px",
           "id": 53,
@@ -6091,7 +6091,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "height": "300px",
           "id": 54,
@@ -6368,7 +6368,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "height": "300px",
           "id": 56,
@@ -6570,7 +6570,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "height": "300px",
           "id": 55,
@@ -6699,7 +6699,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "height": "300px",
           "id": 57,
@@ -6824,7 +6824,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "fill": 1,
           "height": "300px",
           "id": 50,
@@ -7112,7 +7112,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_LOCALHOST}",
+          "datasource": "Prometheus",
           "description": "node_exporter: Duration of a scrape job.",
           "fill": 1,
           "id": 40,
@@ -7196,24 +7196,19 @@
   "templating": {
     "list": [
       {
-        "allValue": null,
-        "current": {},
-        "datasource": "${DS_LOCALHOST}",
-        "hide": 0,
-        "includeAll": false,
-        "label": "Host:",
-        "multi": false,
-        "name": "node",
-        "options": [],
-        "query": "label_values(node_boot_time{job=\"node-exporter\"}, instance)",
-        "refresh": 1,
-        "regex": "/([^:]+):.*/",
-        "sort": 0,
-        "tagValuesQuery": "",
-        "tags": [],
-        "tagsQuery": "",
+        "name": "host",
+        "label": "Host",
         "type": "query",
-        "useTags": false
+        "datasource": "Prometheus",
+        "query": "label_values(up{job=\"node-exporter\"}, instance)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": ".*"
+        }
       }
     ]
   },
