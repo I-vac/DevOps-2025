@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   minitwit:
     build:
@@ -5,6 +7,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5000:5000"
+      - "9404:9404"
     volumes:
       - minitwit-data:/data
     environment:
@@ -17,12 +20,51 @@ services:
       dockerfile: Dockerfile.api
     ports:
       - "5001:5001"
+      - "9405:9404"     # host 9405 → container 9404
     volumes:
       - minitwit-data:/data
     environment:
       - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
     restart: always
 
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      # dashboards JSON needs to live under /var/lib/grafana/dashboards:
+      - ./grafana/provisioning/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    command:
+      - '--path.rootfs=/host'
+    volumes:
+      - /:/host:ro
+    ports:
+      - "9100:9100"
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - "8080:8080"
+
 volumes:
   minitwit-data:
     driver: local
+  grafana-data:
