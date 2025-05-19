@@ -33,11 +33,18 @@
   <ul class="messages">
     <#list messages as message>
       <li>
-        <img src="${message.email?url('UTF-8')?replace('url(', '')?replace(')','')}&size=48">
+        <img
+          src="${GravatarUtil.getUrl(message.email, 48)}"
+          alt="avatar for ${message.username}"
+        >
         <p>
-          <strong><a href="/${message.username}">${message.username}</a></strong>
+          <strong>
+            <a href="/${message.username}">
+              ${message.username}
+            </a>
+          </strong>
           ${message.text}
-          <small>&mdash; ${message.pub_date?replace(",", "")?number?number_to_datetime?string("yyyy-MM-dd @ HH:mm")}</small>
+          <small>&mdash; ${DateUtil.format(message.pub_date)}</small>
         </p>
       </li>
     <#else>
