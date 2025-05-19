@@ -1,0 +1,41 @@
+name: Deploy Monitoring Stack
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Monitoring Droplet
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Sync monitoring folder to droplet
+        run: |
+          rsync -avz --delete monitoring/ \
+            ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_HOST }}:~/monitoring/
+
+      - name: Deploy on remote
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+              ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_HOST }} << 'EOF'
+            # Write your DO_TOKEN into .env
+            echo "DO_TOKEN=${{ secrets.DO_TOKEN }}" > ~/monitoring/.env
+
+            cd ~/monitoring
+            # Pull latest images (optional)
+            docker compose pull
+
+            # Bring up updated stack
+            docker compose up -d
+          EOF
