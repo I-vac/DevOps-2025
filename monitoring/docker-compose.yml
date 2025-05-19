@@ -1,9 +1,5 @@
 version: '3.9'
 
-# Load environment variables (DO_TOKEN) from .env (git-ignored)
-env_file:
-  - ./.env
-
 services:
   prometheus:
     image: prom/prometheus:latest
@@ -17,8 +13,6 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
-    env_file:
-      - ./.env       # if you wish to use GF_ env vars later
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
@@ -26,8 +20,6 @@ services:
       - ./grafana/provisioning/dashboards:/var/lib/grafana/dashboards:ro
     ports:
       - "3000:3000"
-    environment:
-      GF_SECURITY_ADMIN_PASSWORD: "changeme"
     restart: unless-stopped
 
   node-exporter:
@@ -39,8 +31,6 @@ services:
       - '--path.rootfs=/host'
     volumes:
       - /:/host:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
     restart: unless-stopped
 
   cadvisor:
