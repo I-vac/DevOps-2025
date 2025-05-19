@@ -1,7 +1,8 @@
+# grafana/provisioning/dashboards/dashboards.yaml
 apiVersion: 1
 
 providers:
-  - name: 'Java App Metrics'
+  - name: 'All Dashboards'
     orgId: 1
     folder: ''
     type: file
