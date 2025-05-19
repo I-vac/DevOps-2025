@@ -54,13 +54,13 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
     restart: unless-stopped
 
-  do-exporter:
-    image: quay.io/digitalocean/do-agent-exporter:latest
-    container_name: do-exporter
-    network_mode: host
-    environment:
-      - DO_TOKEN=${DO_TOKEN}
-    restart: unless-stopped
+  # do-exporter:
+  #   image: quay.io/digitalocean/do-agent-exporter:latest
+  #   container_name: do-exporter
+  #   network_mode: host
+  #   environment:
+  #     - DO_TOKEN=${DO_TOKEN}
+  #   restart: unless-stopped
 
 volumes:
   grafana-data:
