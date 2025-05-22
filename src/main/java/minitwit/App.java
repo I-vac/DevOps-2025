@@ -5,6 +5,10 @@ import spark.Request;
 import spark.Response;
 import java.util.*;
 import org.mindrot.jbcrypt.BCrypt;
+import io.prometheus.client.hotspot.DefaultExports;
+import io.prometheus.client.exporter.MetricsServlet;
+import io.prometheus.client.spark.SparkMetricsMiddleware;
+
 
 public class App {
     private static final int PER_PAGE = 30;
@@ -25,6 +29,25 @@ public class App {
         before((req, res) -> {
             req.session().maxInactiveInterval(300); // 5 minutes
         });
+
+        // 1️⃣ Register JVM (HotSpot) metrics
+        DefaultExports.initialize();
+
+        // 2️⃣ Attach Spark “middleware” for HTTP metrics
+        SparkMetricsMiddleware.apply();
+
+        // 3️⃣ Expose a metrics servlet
+        path("/metrics", () -> {
+            get("", (req, res) -> {
+            // Handled by the servlet
+            return null;
+            });
+            Spark.staticFiles.externalLocation("/");  // just ensure Spark will mount servlets
+        });
+        ServletHolder metricsHolder = new ServletHolder(new MetricsServlet());
+        Spark.externalStaticFileLocation(null); // clear any bogus static mount
+        Spark.after("/metrics", (req, res) -> {}); 
+        Spark.get("/metrics", metricsHolder);    // <-- binds Prometheus metrics
 
         // Routes
         get("/", (req, res) -> {

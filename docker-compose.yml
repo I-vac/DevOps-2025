@@ -6,10 +6,12 @@ services:
     ports:
       - "5000:5000"
       - "9404:9404"
+      - "9091:9091"     # expose HTTP metrics
     volumes:
       - minitwit-data:/data
     environment:
       - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+      - METRICS_PORT=9091
     restart: always
 
   simulator-api:
@@ -19,10 +21,12 @@ services:
     ports:
       - "5001:5001"
       - "9405:9404"     # host 9405 → container 9404
+      - "9092:9091"    # HTTP /metrics (host 9092 → container 9091)
     volumes:
       - minitwit-data:/data
     environment:
       - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+      - "9092:9091"    # HTTP /metrics (host 9092 → container 9091)
     restart: always
 
 volumes:
