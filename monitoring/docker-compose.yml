@@ -5,14 +5,8 @@ services:
     ports:
       - "9090:9090"
     restart: unless-stopped
-    # Mount your config file only; leave the internal /etc/prometheus/consoles intact
     volumes:
-      - type: bind
-        source: ./prometheus/prometheus.yml
-        target: /etc/prometheus/prometheus.yml
-        read_only: true
-      # (Optional) Persist TSDB data
-      - prometheus-data:/prometheus
+      - ./prometheus/:/etc/prometheus/:ro
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
