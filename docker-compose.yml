@@ -1,31 +1,31 @@
 version: '3.8'
 
 services:
-  minitwit:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "5000:5000"
-      - "9404:9404"
-    volumes:
-      - minitwit-data:/data
-    environment:
-      - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
-    restart: always
+  # minitwit:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "5000:5000"
+  #     - "9404:9404"
+  #   volumes:
+  #     - minitwit-data:/data
+  #   environment:
+  #     - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+  #   restart: always
 
-  simulator-api:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
-    ports:
-      - "5001:5001"
-      - "9405:9404"     # host 9405 → container 9404
-    volumes:
-      - minitwit-data:/data
-    environment:
-      - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
-    restart: always
+  # simulator-api:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.api
+  #   ports:
+  #     - "5001:5001"
+  #     - "9405:9404"     # host 9405 → container 9404
+  #   volumes:
+  #     - minitwit-data:/data
+  #   environment:
+  #     - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+  #   restart: always
 
   prometheus:
     image: prom/prometheus:latest
@@ -65,6 +65,5 @@ services:
       - "8080:8080"
 
 volumes:
-  minitwit-data:
-    driver: local
   grafana-data:
+    driver: local
