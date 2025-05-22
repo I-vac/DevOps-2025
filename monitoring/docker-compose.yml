@@ -21,6 +21,8 @@ services:
       - ./grafana/provisioning/dashboards:/var/lib/grafana/dashboards:ro
     ports:
       - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=HelloWorld123
     restart: unless-stopped
 
   node-exporter:
