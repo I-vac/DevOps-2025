@@ -59,7 +59,7 @@
             "options": {},
             "targets": [
                 {
-                    "expr": "(jvm_memory_used_bytes{area=\"heap\"} / jvm_memory_max_bytes{area=\"heap\"}) * 100",
+                    "expr": "(jvm_memory_bytes_used{area="heap"} / jvm_memory_bytes_max{area="heap"}) * 100",
                     "legendFormat": "Heap %",
                     "refId": "A"
                 }
@@ -83,7 +83,7 @@
             "options": {},
             "targets": [
                 {
-                    "expr": "jvm_threads_live_threads{job=\"app-jmx\"}",
+                    "expr": "jvm_threads_threads_current{job=\"app-jmx\"}",
                     "refId": "A"
                 }
             ],
@@ -106,7 +106,7 @@
             "options": {},
             "targets": [
                 {
-                    "expr": "rate(jvm_gc_pause_seconds_sum{job=\"app-jmx\"}[5m])",
+                    "expr": "rate(jvm_gc_collection_seconds_sum{job=\"app-jmx\"}[5m])",
                     "legendFormat": "GC pause rate",
                     "refId": "A"
                 }
