@@ -59,7 +59,7 @@
             "options": {},
             "targets": [
                 {
-                    "expr": "(jvm_memory_bytes_used{area="heap"} / jvm_memory_bytes_max{area="heap"}) * 100",
+                    "expr": "(jvm_memory_bytes_used{area=\"heap\"} / jvm_memory_bytes_max{area=\"heap\"}) * 100",
                     "legendFormat": "Heap %",
                     "refId": "A"
                 }
