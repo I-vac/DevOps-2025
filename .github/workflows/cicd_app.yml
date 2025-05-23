@@ -42,10 +42,19 @@ jobs:
       - name: Validate monitoring docker-compose
         run: docker-compose -f monitoring/docker-compose.yml config -q
 
+  lint-app-compose:
+    name: Validate App docker-compose
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Validate app docker-compose.yml
+        run: docker-compose -f docker-compose.yml config -q
+
   deploy:
     runs-on: ubuntu-latest
-    needs: [test-java, lint-monitoring]
-    if: always()   # or `needs.test-java.result == 'success' && needs.lint-monitoring.result == 'success'`
+    needs: [test-java, lint-monitoring, lint-app-compose]
+    if: needs.test-java.result == 'success' && needs.lint-monitoring.result == 'success' && needs.lint-app-compose.result == 'success'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
