@@ -8,53 +8,40 @@ import org.mindrot.jbcrypt.BCrypt;
 import com.google.gson.Gson;
 
 import io.prometheus.client.Summary;
-import io.prometheus.client.exporter.MetricsServlet;
-import spark.servlet.SparkApplication;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-
+import io.prometheus.client.hotspot.DefaultExports;
+import io.prometheus.client.exporter.HTTPServer;
 
 public class App {
     private static final int PER_PAGE = 30;
 
-    // 1️⃣ JVM metrics (already added)
-    io.prometheus.client.hotspot.DefaultExports.initialize();
+    // 1️⃣ JVM metrics (HotSpot)
+    static {
+        DefaultExports.initialize();
+    }
 
-    // 2️⃣ HTTP request latency histogram
+    // 2️⃣ HTTP request latency summary
     static final Summary httpLatency = Summary.build()
         .name("http_request_duration_seconds")
         .help("HTTP request latency in seconds")
         .labelNames("method","endpoint","status")
         .register();
 
-    // 3️⃣ DB query latency histogram
-    static final Summary dbLatency = Summary.build()
-        .name("db_query_duration_seconds")
-        .help("DB query latency in seconds")
-        .register();
+    // 3️⃣ DB query latency summary (DB instrumentation in Database class)
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
+        // Start Prometheus HTTP server on metrics port
+        String mp = System.getenv("METRICS_PORT");
+        int metricsPort = mp != null ? Integer.parseInt(mp) : 9091;
+        new HTTPServer(metricsPort);
 
-        // mount Prometheus servlet
-        ServletContextHandler handler = 
-            new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-        handler.setContextPath("/");
-        handler.addServlet(new ServletHolder(new MetricsServlet()), "/metrics");
-        Spark.embeddedServerFactory().create(new SparkApplication() {
-        @Override public void init() {
-            handler.handle(); 
-        }
-        }).start();
-
-        // before‐after filters for HTTP timing
-        before((req,res) -> req.attribute("startTime", System.nanoTime()));
-        afterAfter((req,res) -> {
-        long start = req.attribute("startTime");
-        double secs = (System.nanoTime()-start)/1e9;
-        httpLatency.labels(req.requestMethod(), req.pathInfo(), String.valueOf(res.status()))
-                    .observe(secs);
+        // before-after filters for HTTP timing
+        before((req, res) -> req.attribute("startTime", System.nanoTime()));
+        afterAfter((req, res) -> {
+            long start = req.attribute("startTime");
+            double secs = (System.nanoTime() - start) / 1e9;
+            httpLatency.labels(req.requestMethod(), req.pathInfo(), String.valueOf(res.status()))
+                       .observe(secs);
         });
-
 
         // Configure SparkJava
         port(5000);
@@ -68,9 +55,7 @@ public class App {
         TemplateRenderer.configure();
 
         // Session setup
-        before((req, res) -> {
-            req.session().maxInactiveInterval(300); // 5 minutes
-        });
+        before((req, res) -> req.session().maxInactiveInterval(300));
 
         // Routes
         get("/", (req, res) -> {
@@ -79,7 +64,7 @@ public class App {
                 return null;
             }
             Map<String, Object> model = createModel(req);
-            int userId = (Integer) req.session().attribute("user_id");
+            int userId = req.session().attribute("user_id");
             model.put("messages", Database.getTimelineMessages(userId, PER_PAGE));
             return TemplateRenderer.render("timeline", model);
         });
@@ -101,12 +86,9 @@ public class App {
             return TemplateRenderer.render("login", model);
         });
 
-
-        // right with your other routes:
         get("/latest", (req, res) -> {
             int latest = Database.getLatestCommandId();
             res.type("application/json");
-            // e.g. { "latest_id": 42 }
             return new Gson().toJson(Map.of("latest_id", latest));
         });
 
@@ -114,14 +96,12 @@ public class App {
             String username = req.queryParams("username");
             String password = req.queryParams("password");
             Map<String, Object> user = Database.getUserByUsername(username);
-            
             if (user != null && BCrypt.checkpw(password, (String) user.get("pw_hash"))) {
                 req.session().attribute("user_id", user.get("user_id"));
                 addFlash(req, "You were logged in");
                 res.redirect("/");
                 return null;
             }
-            
             Map<String, Object> model = createModel(req);
             model.put("error", "Invalid username/password");
             model.put("username", username);
@@ -139,8 +119,6 @@ public class App {
             String email = req.queryParams("email");
             String password = req.queryParams("password");
             String password2 = req.queryParams("password2");
-
-            // Validation
             if (username == null || username.isEmpty()) {
                 model.put("error", "You have to enter a username");
             } else if (email == null || !email.contains("@")) {
@@ -152,13 +130,11 @@ public class App {
             } else if (Database.getUserByUsername(username) != null) {
                 model.put("error", "The username is already taken");
             }
-
             if (model.containsKey("error")) {
                 model.put("username", username);
                 model.put("email", email);
                 return TemplateRenderer.render("register", model);
             }
-
             Database.createUser(username, email, BCrypt.hashpw(password, BCrypt.gensalt()));
             addFlash(req, "You were successfully registered and can login now");
             res.redirect("/login");
@@ -175,65 +151,48 @@ public class App {
         get("/:username", (req, res) -> {
             Map<String, Object> model = createModel(req);
             String username = req.params(":username");
-            Map<String, Object> profileUser = Database.getUserByUsername(username);
-
-            if (profileUser == null) {
-                halt(404, "User not found");
-            }
-
+            Map<String, Object> profile = Database.getUserByUsername(username);
+            if (profile == null) halt(404, "User not found");
             boolean followed = false;
-            Integer currentUserId = req.session().attribute("user_id");
-            if (currentUserId != null) {
-                followed = Database.isFollowing(currentUserId, (Integer) profileUser.get("user_id"));
+            Integer current = req.session().attribute("user_id");
+            if (current != null) {
+                followed = Database.isFollowing(current, (Integer) profile.get("user_id"));
             }
-
-            model.put("profile_user", profileUser);
+            model.put("profile_user", profile);
             model.put("followed", followed);
-            model.put("messages", Database.getUserTimeline(
-                (Integer) profileUser.get("user_id"), PER_PAGE));
-            
+            model.put("messages", Database.getUserTimeline((Integer) profile.get("user_id"), PER_PAGE));
             return TemplateRenderer.render("timeline", model);
         });
 
         get("/:username/follow", (req, res) -> {
-            Integer currentUserId = checkAuthenticated(req);
+            Integer current = checkAuthenticated(req);
             String username = req.params(":username");
-            Map<String, Object> profileUser = Database.getUserByUsername(username);
-
-            if (profileUser == null) {
-                halt(404, "User not found");
-            }
-
-            Database.followUser(currentUserId, (Integer) profileUser.get("user_id"));
+            Map<String, Object> profile = Database.getUserByUsername(username);
+            if (profile == null) halt(404, "User not found");
+            Database.followUser(current, (Integer) profile.get("user_id"));
             addFlash(req, "You are now following " + username);
             res.redirect("/" + username);
             return null;
         });
 
         get("/:username/unfollow", (req, res) -> {
-            Integer currentUserId = checkAuthenticated(req);
+            Integer current = checkAuthenticated(req);
             String username = req.params(":username");
-            Map<String, Object> profileUser = Database.getUserByUsername(username);
-
-            if (profileUser == null) {
-                halt(404, "User not found");
-            }
-
-            Database.unfollowUser(currentUserId, (Integer) profileUser.get("user_id"));
+            Map<String, Object> profile = Database.getUserByUsername(username);
+            if (profile == null) halt(404, "User not found");
+            Database.unfollowUser(current, (Integer) profile.get("user_id"));
             addFlash(req, "You are no longer following " + username);
             res.redirect("/" + username);
             return null;
         });
 
         post("/add_message", (req, res) -> {
-            Integer userId = checkAuthenticated(req);
+            Integer user = checkAuthenticated(req);
             String text = req.queryParams("text");
-            
             if (text != null && !text.trim().isEmpty()) {
-                Database.createMessage(userId, text.trim(), System.currentTimeMillis() / 1000);
+                Database.createMessage(user, text.trim(), System.currentTimeMillis()/1000);
                 addFlash(req, "Your message was recorded");
             }
-            
             res.redirect("/");
             return null;
         });
