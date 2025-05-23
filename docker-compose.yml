@@ -30,5 +30,7 @@ services:
     restart: always
 
 volumes:
+  # bind to your existing volume named "minitwit_minitwit-data"
   minitwit-data:
-    driver: local
+    external:
+      name: minitwit_minitwit-data
