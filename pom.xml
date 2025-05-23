@@ -80,17 +80,14 @@
         <plugin>
             <groupId>com.coveo</groupId>
             <artifactId>fmt-maven-plugin</artifactId>
-            <version>2.16</version>  <!-- latest as of now -->
+            <version>2.16</version>
             <configuration>
-                <!-- GOOGLE, SUN, AOSP, or your custom style -->
                 <style>GOOGLE</style>
             </configuration>
             <executions>
                 <execution>
                 <goals>
-                    <!-- check will fail the build if formatting is off -->
                     <goal>check</goal>
-                    <!-- format will auto-fix sources -->
                     <goal>format</goal>
                 </goals>
                 </execution>
