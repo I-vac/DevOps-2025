@@ -9,6 +9,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 public class SimulatorAPI {
     private static final int PER_PAGE = 30;
+    private static final Gson gson = new Gson();
 
     public static void main(String[] args) {
         // Configure SparkJava
@@ -47,6 +48,21 @@ public class SimulatorAPI {
             model.put("messages", Database.getPublicTimeline(PER_PAGE));
             return TemplateRenderer.render("timeline", model);
         });
+
+                // Health check
+        get("/health", (req, res) -> {
+            res.type("application/json");
+            return gson.toJson(Map.of("status", "ok"));
+        });
+
+        // right with your other routes:
+        get("/latest", (req, res) -> {
+            int latest = Database.getLatestCommandId();
+            res.type("application/json");
+            // e.g. { "latest_id": 42 }
+            return gson.toJson(Map.of("latest_id", latest));
+        });
+
 
         get("/login", (req, res) -> {
             Map<String, Object> model = createModel(req);
@@ -116,20 +132,6 @@ public class SimulatorAPI {
             addFlash(req, "You are no longer following " + username);
             res.redirect("/" + username);
             return null;
-        });
-
-        // Health check
-        get("/health", (req, res) -> {
-            res.type("application/json");
-            return new Gson().toJson(Map.of("status", "ok"));
-        });
-
-        // right with your other routes:
-        get("/latest", (req, res) -> {
-            int latest = Database.getLatestCommandId();
-            res.type("application/json");
-            // e.g. { "latest_id": 42 }
-            return new Gson().toJson(Map.of("latest_id", latest));
         });
 
         // Register endpoint
