@@ -5,6 +5,7 @@ import spark.Request;
 import spark.Response;
 import java.util.*;
 import org.mindrot.jbcrypt.BCrypt;
+import com.google.gson.Gson;    
 
 
 public class App {
@@ -39,6 +40,12 @@ public class App {
             return TemplateRenderer.render("timeline", model);
         });
 
+        // Health check
+        get("/health", (req, res) -> {
+            res.type("application/json");
+            return new Gson().toJson(Map.of("status", "ok"));
+        });
+
         get("/public", (req, res) -> {
             Map<String, Object> model = createModel(req);
             model.put("messages", Database.getPublicTimeline(PER_PAGE));
@@ -48,6 +55,15 @@ public class App {
         get("/login", (req, res) -> {
             Map<String, Object> model = createModel(req);
             return TemplateRenderer.render("login", model);
+        });
+
+
+        // right with your other routes:
+        get("/latest", (req, res) -> {
+            int latest = Database.getLatestCommandId();
+            res.type("application/json");
+            // e.g. { "latest_id": 42 }
+            return new Gson().toJson(Map.of("latest_id", latest));
         });
 
         post("/login", (req, res) -> {

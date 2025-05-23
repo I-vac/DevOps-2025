@@ -34,3 +34,4 @@ volumes:
   minitwit-data:
     external:
       name: minitwit_minitwit-data
+    # name: minitwit_minitwit-data

@@ -116,4 +116,16 @@ public class Database {
             ORDER BY message.pub_date DESC 
             LIMIT ?""", userId, limit);
     }
+
+    public static int getLatestCommandId() {
+        List<Map<String, Object>> rows = query(
+            "SELECT message_id FROM message ORDER BY message_id DESC LIMIT 1"
+        );
+        if (rows.isEmpty()) {
+            return 0;
+        }
+        // JDBC will return an Integer or Long; coerce to int
+        Number n = (Number) rows.get(0).get("message_id");
+        return n == null ? 0 : n.intValue();
+    }
 }
