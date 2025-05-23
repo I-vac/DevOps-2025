@@ -13,20 +13,32 @@
     </properties>
 
     <dependencies>
+        <!-- core metrics API -->
         <dependency>
             <groupId>io.prometheus</groupId>
-            <artifactId>simpleclient_spark</artifactId>
+            <artifactId>simpleclient</artifactId>
             <version>0.16.0</version>
         </dependency>
+
+        <!-- automatically collect JVM metrics (heap, GC, threads…) -->
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>simpleclient_hotspot</artifactId>
             <version>0.16.0</version>
         </dependency>
+
+        <!-- expose a /metrics HTTP endpoint via a servlet -->
         <dependency>
             <groupId>io.prometheus</groupId>
-            <artifactId>simpleclient_common</artifactId>
+            <artifactId>simpleclient_servlet</artifactId>
             <version>0.16.0</version>
+        </dependency>
+
+        <!-- add the Jetty servlet runner -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>11.0.17</version>
         </dependency>
 
         <!-- SparkJava -->

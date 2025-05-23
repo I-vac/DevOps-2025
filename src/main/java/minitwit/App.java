@@ -7,13 +7,19 @@ import java.util.*;
 import org.mindrot.jbcrypt.BCrypt;
 import io.prometheus.client.hotspot.DefaultExports;
 import io.prometheus.client.exporter.MetricsServlet;
-import io.prometheus.client.spark.SparkMetricsMiddleware;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+import spark.servlet.SparkApplication;
+
 
 
 public class App {
     private static final int PER_PAGE = 30;
 
     public static void main(String[] args) {
+        // 1️⃣ Register JVM (HotSpot) metrics
+        DefaultExports.initialize();
+
         // Configure SparkJava
         port(5000);
         staticFiles.location("/public");
@@ -30,24 +36,19 @@ public class App {
             req.session().maxInactiveInterval(300); // 5 minutes
         });
 
-        // 1️⃣ Register JVM (HotSpot) metrics
-        DefaultExports.initialize();
+        // mount /metrics
+        ServletContextHandler handler = 
+            new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+        handler.setContextPath("/");
+        handler.addServlet(new ServletHolder(new MetricsServlet()), "/metrics");
 
-        // 2️⃣ Attach Spark “middleware” for HTTP metrics
-        SparkMetricsMiddleware.apply();
-
-        // 3️⃣ Expose a metrics servlet
-        path("/metrics", () -> {
-            get("", (req, res) -> {
-            // Handled by the servlet
-            return null;
-            });
-            Spark.staticFiles.externalLocation("/");  // just ensure Spark will mount servlets
-        });
-        ServletHolder metricsHolder = new ServletHolder(new MetricsServlet());
-        Spark.externalStaticFileLocation(null); // clear any bogus static mount
-        Spark.after("/metrics", (req, res) -> {}); 
-        Spark.get("/metrics", metricsHolder);    // <-- binds Prometheus metrics
+        // tell Spark to use that handler
+        Spark.embeddedServerFactory().create(new SparkApplication() {
+            @Override
+            public void init() {
+                handler.handle();  // this wires up the servlet
+            }
+        }).start();
 
         // Routes
         get("/", (req, res) -> {
