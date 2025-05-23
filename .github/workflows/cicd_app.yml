@@ -9,7 +9,7 @@ on:
 jobs:
   # 1) Static analysis on Java
   lint-java:
-    name: Java Lint & Format
+    name: Lint & Format Java
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -20,15 +20,17 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Cache Maven deps
+      - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
 
-      - name: Code‐formatter check (fmt-maven)
-        run: mvn com.coveo:fmt-maven-plugin:2.16:check
+      # 1) Code formatter check (Google Java Format via Spotify plugin)
+      - name: Java code formatting check
+        run: mvn com.spotify.fmt:fmt-maven-plugin:2.23:check
 
+      # 2) Static analysis: Checkstyle
       - name: Checkstyle
         run: mvn checkstyle:check
 
