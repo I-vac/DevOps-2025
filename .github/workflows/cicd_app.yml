@@ -54,12 +54,14 @@ jobs:
       - name: Build app & simulator images
         run: |
           docker compose \
+            -f docker-compose.yml \
             -f docker-compose.test.yml \
             build minitwit simulator-api
 
       - name: Start app stack
         run: |
           docker compose \
+            -f docker-compose.yml \
             -f docker-compose.test.yml \
             up -d
 
@@ -85,6 +87,7 @@ jobs:
       - name: Tear down
         run: |
           docker compose \
+            -f docker-compose.yml \
             -f docker-compose.test.yml \
             down --volumes
 
