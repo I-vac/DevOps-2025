@@ -27,9 +27,11 @@ jobs:
             # 1) App + Simulator
             cd ~/DevOps-2025                 
             git pull
-            docker-compose up -d --build
+            docker compose down
+            docker compose up -d --build
 
             # 2) Monitoring
             cd monitoring
             git pull
-            docker-compose up -d --build
+            docker compose down
+            docker compose up -d --build
