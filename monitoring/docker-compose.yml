@@ -6,9 +6,6 @@ services:
       - prometheus-data:/prometheus
     ports:
       - "9090:9090"
-    command:
-      - "--storage.tsdb.path=/prometheus"
-      - "--storage.tsdb.retention.time=30d"
 
   grafana:
     image: grafana/grafana:latest
