@@ -22,3 +22,11 @@ scrape_configs:
       - targets:
           - '161.35.71.145:9091'
           - '161.35.71.145:9092'
+
+  - job_name: 'app-node-exporter'
+    static_configs:
+      - targets: ['161.35.71.145:9101']
+
+  - job_name: 'app-cadvisor'
+    static_configs:
+      - targets: ['161.35.71.145:8081']

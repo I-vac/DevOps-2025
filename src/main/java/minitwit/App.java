@@ -6,18 +6,12 @@ import spark.Response;
 import java.util.*;
 import org.mindrot.jbcrypt.BCrypt;
 import com.google.gson.Gson;
-import io.prometheus.client.exporter.HTTPServer;
-import io.prometheus.client.hotspot.DefaultExports;
-
 
 
 public class App {
     private static final int PER_PAGE = 30;
 
     public static void main(String[] args) {
-        // initialize JVM metrics
-        DefaultExports.initialize();
-        new HTTPServer(9404);
 
         // Configure SparkJava
         port(5000);

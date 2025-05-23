@@ -6,7 +6,7 @@ services:
     ports:
       - "5000:5000"
       - "9404:9404"
-      - "9091:9094"     # expose HTTP metrics
+      - "9091:9091"     # expose HTTP metrics
     volumes:
       - minitwit-data:/data
     environment:
@@ -21,13 +21,33 @@ services:
     ports:
       - "5001:5001"
       - "9405:9404"     # host 9405 → container 9404
-      - "9092:9094"    # HTTP /metrics (host 9092 → container 9091)
+      - "9092:9091"    # HTTP /metrics (host 9092 → container 9091)
     volumes:
       - minitwit-data:/data
     environment:
       - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
-      - "9092:9094"    # HTTP /metrics (host 9092 → container 9091)
+      - "9092:9091"    # HTTP /metrics (host 9092 → container 9091)
     restart: always
+
+  node-exporter-app:
+    image: prom/node-exporter:latest
+    command: ["--path.rootfs=/host"]
+    volumes:
+      - /:/host:ro
+    ports:
+      - "9101:9100"      # host 9101 → container 9100
+    restart: unless-stopped
+
+  cadvisor-app:
+    image: gcr.io/cadvisor/cadvisor:latest
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - "8081:8080"      # host 8081 → container 8080
+    restart: unless-stopped
 
 volumes:
   # bind to your existing volume named "minitwit_minitwit-data"
