@@ -1,4 +1,4 @@
-name: CI/CD for Application
+name: CI/CD for Java Application
 
 on:
   workflow_dispatch:
@@ -23,7 +23,7 @@ jobs:
           script: |
             set -e
 
-            # 1) App + Simulator
+            # 1) App
             cd ~/DevOps-2025                 
             git pull
             docker compose down
