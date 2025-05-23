@@ -26,10 +26,10 @@ public class SimulatorAPI {
         // Middleware for content-type and authorization
         before((req, res) -> {
             res.type("application/json");
-            // String authHeader = req.headers("Authorization");
-            // if (authHeader == null || !authHeader.startsWith("Basic ")) {
-            //     halt(403, gson.toJson(Map.of("error", "Unauthorized")));
-            // }
+            String authHeader = req.headers("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Basic ")) {
+                halt(403, gson.toJson(Map.of("error", "Unauthorized")));
+            }
         });
 
          get("/", (req, res) -> {

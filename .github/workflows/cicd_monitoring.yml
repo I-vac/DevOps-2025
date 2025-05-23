@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - feat/monitoring
+    paths:
+      - 'monitoring/**'
 
 jobs:
   deploy:

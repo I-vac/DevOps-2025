@@ -27,4 +27,4 @@ jobs:
             cd ~/DevOps-2025                 
             git pull
             docker compose down
-            docker compose up -d
+            docker compose up -d --build
