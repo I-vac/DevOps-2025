@@ -5,13 +5,26 @@ import spark.Request;
 import spark.Response;
 import java.util.*;
 import org.mindrot.jbcrypt.BCrypt;
-import com.google.gson.Gson;    
+import com.google.gson.Gson;
+import io.prometheus.client.exporter.HTTPServer;
+import io.prometheus.client.hotspot.DefaultExports;
+import java.net.InetSocketAddress;
+
 
 
 public class App {
     private static final int PER_PAGE = 30;
 
     public static void main(String[] args) {
+        // initialize JVM metrics
+        DefaultExports.initialize();
+        // read port from ENV (fall back to old JMX port if unset)
+        String mp = System.getenv("METRICS_PORT");
+        int metricsPort = (mp != null) ? Integer.parseInt(mp) : 9404;
+
+        // start the Prometheus HTTP /metrics server
+        new HTTPServer(new InetSocketAddress("0.0.0.0", metricsPort), true);
+        
         // Configure SparkJava
         port(5000);
         staticFiles.location("/public");
