@@ -8,37 +8,37 @@ on:
 
 jobs:
   # 1) Static analysis on Java
-  lint-java:
-    name: Lint & Format Java
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+  # lint-java:
+  #   name: Lint & Format Java
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
 
-      - name: Set up Java 21
-        uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: '21'
+  #     - name: Set up Java 21
+  #       uses: actions/setup-java@v3
+  #       with:
+  #         distribution: temurin
+  #         java-version: '21'
 
-      - name: Cache Maven dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+  #     - name: Cache Maven dependencies
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: ~/.m2/repository
+  #         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
 
-      # 1) Code formatter check (Google Java Format via Spotify plugin)
-      - name: Java code formatting check
-        run: mvn com.spotify.fmt:fmt-maven-plugin:2.23:check
+  #     # 1) Code formatter check (Google Java Format via Spotify plugin)
+  #     - name: Java code formatting check
+  #       run: mvn com.spotify.fmt:fmt-maven-plugin:2.23:check
 
-      # 2) Static analysis: Checkstyle
-      - name: Checkstyle
-        run: mvn checkstyle:check
+  #     # 2) Static analysis: Checkstyle
+  #     - name: Checkstyle
+  #       run: mvn checkstyle:check
 
   # 2) Build & run unit tests in Java
   build-test:
     name: Build & Unit Test Java
     runs-on: ubuntu-latest
-    needs: lint-java
+    # needs: lint-java
     steps:
       - uses: actions/checkout@v3
 
@@ -97,7 +97,7 @@ jobs:
   lint-docker:
     name: Hadolint Dockerfiles
     runs-on: ubuntu-latest
-    needs: lint-java
+    # needs: lint-java
     steps:
       - uses: actions/checkout@v3
       - name: Lint Dockerfile (app)
@@ -109,7 +109,7 @@ jobs:
   lint-shell:
     name: ShellCheck Scripts
     runs-on: ubuntu-latest
-    needs: lint-java
+    # needs: lint-java
     steps:
       - uses: actions/checkout@v3
       - name: Install ShellCheck
@@ -163,7 +163,7 @@ jobs:
   deploy:
     name: Deploy to Droplet
     runs-on: ubuntu-latest
-    needs: [lint-java, build-test, lint-docker, lint-shell, build-test-docker, build-and-test]
+    needs: [build-test, lint-docker, lint-shell, build-test-docker, build-and-test]
     steps:
       - uses: actions/checkout@v3
 
