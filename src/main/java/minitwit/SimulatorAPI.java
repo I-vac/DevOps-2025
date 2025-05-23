@@ -8,7 +8,6 @@ import java.util.*;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class SimulatorAPI {
-    private static final Gson gson = new Gson();
     private static final int PER_PAGE = 30;
 
     public static void main(String[] args) {
@@ -32,7 +31,7 @@ public class SimulatorAPI {
             }
         });
 
-         get("/", (req, res) -> {
+        get("/", (req, res) -> {
             if (req.session().attribute("user_id") == null) {
                 res.redirect("/public");
                 return null;
@@ -131,14 +130,6 @@ public class SimulatorAPI {
             res.type("application/json");
             // e.g. { "latest_id": 42 }
             return new Gson().toJson(Map.of("latest_id", latest));
-        });
-
-
-        // Endpoint to get the latest processed simulation action ID from the database
-        get("/latest", (req, res) -> {
-            List<Map<String, Object>> result = Database.query("SELECT MAX(message_id) AS latest FROM message");
-            int latestProcessedCommandId = result.isEmpty() || result.get(0).get("latest") == null ? -1 : (int) result.get(0).get("latest");
-            return gson.toJson(Map.of("latest", latestProcessedCommandId));
         });
 
         // Register endpoint
