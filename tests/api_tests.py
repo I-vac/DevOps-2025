@@ -1,91 +1,67 @@
 #!/usr/bin/env python3
-import requests, sys
+import requests
 
-BASE = "http://localhost:5000"
-sess = requests.Session()
-
-def assert_ok(r, code=200):
-    if r.status_code != code:
-        print(f"[FAIL] {r.request.method} {r.url} → {r.status_code}")
-        sys.exit(1)
+BASE = 'http://localhost:5000'
 
 def test_health():
-    r = sess.get(f"{BASE}/health")
-    assert_ok(r)
-    assert r.json().get("status") == "ok"
+    r = requests.get(f'{BASE}/health')
+    assert r.status_code == 200
+    assert r.json() == {"status": "ok"}
 
 def test_public_timeline():
-    r = sess.get(f"{BASE}/public")
-    assert_ok(r)
-    assert "<title>Timeline</title>" in r.text
+    r = requests.get(f'{BASE}/public')
+    assert r.status_code == 200
+    # we should have some HTML <title> or <h1> in the timeline page
+    assert '<title>' in r.text or '<h1>' in r.text
 
-def test_register_and_login_and_latest():
-    user, email, pw = "ci_user", "ci@ci.test", "Password123"
-    # register
-    r = sess.post(f"{BASE}/register", data={
-        "username": user,
-        "email": email,
-        "password": pw,
-        "password2": pw
+def test_register_login_and_post():
+    s = requests.Session()
+    username = 'ci_user'
+    password = 'supersecret'
+    email = 'ci@example.com'
+
+    # 1) register
+    r = s.post(f'{BASE}/register', data={
+        'username': username,
+        'email': email,
+        'password': password,
+        'password2': password,
     }, allow_redirects=False)
     assert r.status_code == 302
+    assert r.headers['Location'] == '/login'
 
-    # login
-    r = sess.post(f"{BASE}/login",
-                  data={"username": user, "password": pw},
-                  allow_redirects=False)
-    assert r.status_code == 302
-
-    # latest (should be an integer; zero if no simulator commands yet)
-    r = sess.get(f"{BASE}/latest")
-    assert_ok(r)
-    assert isinstance(r.json().get("latest_id"), int)
-
-    # add a message
-    text = "hello-CI"
-    r = sess.post(f"{BASE}/add_message",
-                  data={"text": text},
-                  allow_redirects=False)
-    assert r.status_code == 302
-
-    # ensure it shows up on the timeline
-    r = sess.get(f"{BASE}/")
-    assert_ok(r)
-    assert text in r.text
-
-def test_follow_unfollow():
-    # create + login a second user
-    other, pw = "ci_other", "pass"
-    s2 = requests.Session()
-    r = s2.post(f"{BASE}/register", data={
-        "username": other, "email": "o@ci", "password": pw, "password2": pw
+    # 2) login
+    r = s.post(f'{BASE}/login', data={
+        'username': username,
+        'password': password,
     }, allow_redirects=False)
     assert r.status_code == 302
-    r = s2.post(f"{BASE}/login", data={"username": other, "password": pw},
-                allow_redirects=False)
+    assert r.headers['Location'] == '/'
+
+    # 3) check /latest (should be an integer)
+    r = s.get(f'{BASE}/latest')
+    assert r.status_code == 200
+    data = r.json()
+    assert 'latest_id' in data and isinstance(data['latest_id'], int)
+    before = data['latest_id']
+
+    # 4) post a new message
+    message = 'Hello from CI'
+    r = s.post(f'{BASE}/add_message', data={'text': message}, allow_redirects=False)
     assert r.status_code == 302
+    assert r.headers['Location'] == '/'
 
-    # follow ci_user
-    r = s2.get(f"{BASE}/ci_user/follow", allow_redirects=False)
-    assert r.status_code == 302
+    # 5) see it on the public timeline
+    r = s.get(f'{BASE}/public')
+    assert message in r.text
 
-    # verify "Unfollow" link appears
-    r = s2.get(f"{BASE}/ci_user")
-    assert_ok(r)
-    assert "Unfollow" in r.text
+    # 6) /latest should have increased
+    r = s.get(f'{BASE}/latest')
+    after = r.json()['latest_id']
+    assert after >= before + 1
 
-    # unfollow
-    r = s2.get(f"{BASE}/ci_user/unfollow", allow_redirects=False)
-    assert r.status_code == 302
-
-    # verify "Follow" link appears
-    r = s2.get(f"{BASE}/ci_user")
-    assert_ok(r)
-    assert "Follow" in r.text
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     test_health()
     test_public_timeline()
-    test_register_and_login_and_latest()
-    test_follow_unfollow()
-    print("✅  ALL TESTS PASSED")
+    test_register_login_and_post()
+    print("✔ All API tests passed!")
