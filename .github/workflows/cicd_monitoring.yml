@@ -1,4 +1,4 @@
-name: CI/CD
+name: CI/CD for Monitoring
 
 on:
   workflow_dispatch:
@@ -22,12 +22,6 @@ jobs:
           key:      ${{ secrets.DROPLET_SSH_KEY_PRIVATE }}
           script: |
             set -e
-
-            # 1) App + Simulator
-            cd ~/DevOps-2025                 
-            git pull
-            docker compose down
-            docker compose up -d
 
             # 2) Monitoring
             cd monitoring

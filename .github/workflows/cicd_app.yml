@@ -1,0 +1,30 @@
+name: CI/CD for Application
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/monitoring
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy everything to one droplet
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          # host: ${{ secrets.DROPLET_APP_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          key:      ${{ secrets.DROPLET_SSH_KEY_PRIVATE }}
+          script: |
+            set -e
+
+            # 1) App + Simulator
+            cd ~/DevOps-2025                 
+            git pull
+            docker compose down
+            docker compose up -d
