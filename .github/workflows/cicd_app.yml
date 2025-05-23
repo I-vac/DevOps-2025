@@ -17,7 +17,7 @@ jobs:
       - name: Deploy everything to one droplet
         uses: appleboy/ssh-action@v0.1.7
         with:
-          # host: ${{ secrets.DROPLET_APP_HOST }}
+          host: ${{ secrets.DROPLET_APP_HOST }}
           username: ${{ secrets.DROPLET_USER }}
           key:      ${{ secrets.DROPLET_SSH_KEY_PRIVATE }}
           script: |
