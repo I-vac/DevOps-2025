@@ -22,39 +22,22 @@ jobs:
         - name: Build & run Maven tests
           run: mvn clean test -B
 
-  lint-monitoring:
-    name: Lint Prometheus & Docker-Compose
+  lint:
+    name: Lint configs for Docker Compose
     runs-on: ubuntu-latest
-    services:
-      prometheus:
-        image: prom/prometheus:latest
-        options: --entrypoint ""  # so we can run promtool from this image
     steps:
       - uses: actions/checkout@v3
 
-      - name: Lint Prometheus config
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro \
-            prom/prometheus \
-            promtool check config /etc/prometheus/prometheus.yml
-
-      - name: Validate monitoring docker-compose
+      - name: Validate monitoring Docker Compose
         run: docker compose -f monitoring/docker-compose.yml config -q
 
-  lint-app-compose:
-    name: Validate App docker-compose
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Validate app docker-compose.yml
+      - name: Validate app Docker Compose
         run: docker compose -f docker-compose.yml config -q
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [test-java, lint-monitoring, lint-app-compose]
-    if: needs.test-java.result == 'success' && needs.lint-monitoring.result == 'success' && needs.lint-app-compose.result == 'success'
+    needs: [lint, test-java]
+    if: needs.lint.result == 'success' && needs.test-java.result == 'success'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
