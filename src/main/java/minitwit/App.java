@@ -7,11 +7,54 @@ import java.util.*;
 import org.mindrot.jbcrypt.BCrypt;
 import com.google.gson.Gson;
 
+import io.prometheus.client.Summary;
+import io.prometheus.client.exporter.MetricsServlet;
+import spark.servlet.SparkApplication;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+
 
 public class App {
     private static final int PER_PAGE = 30;
 
+    // 1️⃣ JVM metrics (already added)
+    io.prometheus.client.hotspot.DefaultExports.initialize();
+
+    // 2️⃣ HTTP request latency histogram
+    static final Summary httpLatency = Summary.build()
+        .name("http_request_duration_seconds")
+        .help("HTTP request latency in seconds")
+        .labelNames("method","endpoint","status")
+        .register();
+
+    // 3️⃣ DB query latency histogram
+    static final Summary dbLatency = Summary.build()
+        .name("db_query_duration_seconds")
+        .help("DB query latency in seconds")
+        .register();
+
     public static void main(String[] args) {
+
+        // mount Prometheus servlet
+        ServletContextHandler handler = 
+            new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+        handler.setContextPath("/");
+        handler.addServlet(new ServletHolder(new MetricsServlet()), "/metrics");
+        Spark.embeddedServerFactory().create(new SparkApplication() {
+        @Override public void init() {
+            handler.handle(); 
+        }
+        }).start();
+
+        // before‐after filters for HTTP timing
+        before((req,res) -> req.attribute("startTime", System.nanoTime()));
+        afterAfter((req,res) -> {
+        long start = req.attribute("startTime");
+        double secs = (System.nanoTime()-start)/1e9;
+        httpLatency.labels(req.requestMethod(), req.pathInfo(), String.valueOf(res.status()))
+                    .observe(secs);
+        });
+
 
         // Configure SparkJava
         port(5000);

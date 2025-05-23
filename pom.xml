@@ -23,8 +23,12 @@
             <groupId>io.prometheus</groupId>  
             <artifactId>simpleclient_hotspot</artifactId>  
             <version>0.16.0</version>  
+        </dependency> 
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_servlet</artifactId>
+            <version>0.16.0</version>
         </dependency>  
-    
         <!-- HTTP exporter on its own port -->  
         <dependency>  
             <groupId>io.prometheus</groupId>  
