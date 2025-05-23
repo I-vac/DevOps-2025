@@ -5,13 +5,10 @@ import spark.Request;
 import spark.Response;
 import java.util.*;
 import org.mindrot.jbcrypt.BCrypt;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.MetricsServlet;
 import io.prometheus.client.hotspot.DefaultExports;
-import io.prometheus.client.exporter.MetricsServlet;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import spark.servlet.SparkApplication;
-
-
+import static spark.Spark.*;
 
 public class App {
     private static final int PER_PAGE = 30;
@@ -36,19 +33,13 @@ public class App {
             req.session().maxInactiveInterval(300); // 5 minutes
         });
 
-        // mount /metrics
-        ServletContextHandler handler = 
-            new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-        handler.setContextPath("/");
-        handler.addServlet(new ServletHolder(new MetricsServlet()), "/metrics");
-
-        // tell Spark to use that handler
-        Spark.embeddedServerFactory().create(new SparkApplication() {
-            @Override
-            public void init() {
-                handler.handle();  // this wires up the servlet
-            }
-        }).start();
+        // mount the Prometheus servlet at /metrics
+        // (we pull metrics from the default CollectorRegistry)
+        get("/metrics", (req, res) -> {
+        res.type(MetricsServlet.METRICS_PATH);
+        MetricsServlet.export(req.raw(), res.raw(), CollectorRegistry.defaultRegistry.metricFamilySamples());
+        return "";
+        });
 
         // Routes
         get("/", (req, res) -> {
