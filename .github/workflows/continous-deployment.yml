@@ -28,7 +28,7 @@ jobs:
             cd ~/DevOps-2025                 
             git pull
             docker compose down
-            docker compose up -d --build
+            docker compose up -d
 
             # 2) Monitoring
             cd monitoring
