@@ -114,7 +114,7 @@
           },
           "targets": [
             {
-              "expr": "(((count(count(node_cpu{instance=~\"$node:.*\"}) by (cpu))) - avg(sum by (mode)(irate(node_cpu{mode='idle',instance=~\"$node:.*\"}[5m])))) * 100) / count(count(node_cpu{instance=~\"$node:.*\"}) by (cpu))",
+              "expr": "(1 - sum by (instance)(irate(node_cpu_seconds_total{mode=\"idle\",instance=~\"161.35.71.145:9101\"}[5m])) / sum by (instance)(irate(node_cpu_seconds_total{instance=~\"161.35.71.145:9101\"}[5m]))) * 100",
               "hide": false,
               "intervalFactor": 1,
               "legendFormat": "",
