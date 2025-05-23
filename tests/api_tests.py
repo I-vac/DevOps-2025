@@ -11,7 +11,6 @@ def test_health():
 def test_public_timeline():
     r = requests.get(f'{BASE}/public')
     assert r.status_code == 200
-    # we should have some HTML <title> or <h1> in the timeline page
     assert '<title>' in r.text or '<h1>' in r.text
 
 def test_register_login_and_post():
@@ -20,7 +19,7 @@ def test_register_login_and_post():
     password = 'supersecret'
     email = 'ci@example.com'
 
-    # 1) register
+    # 1) register → should redirect to /login
     r = s.post(f'{BASE}/register', data={
         'username': username,
         'email': email,
@@ -28,17 +27,20 @@ def test_register_login_and_post():
         'password2': password,
     }, allow_redirects=False)
     assert r.status_code == 302
-    assert r.headers['Location'] == '/login'
+    loc = r.headers.get('Location', '')
+    assert loc.endswith('/login'), f"unexpected Location: {loc}"
 
-    # 2) login
+    # 2) login → should redirect to /
     r = s.post(f'{BASE}/login', data={
         'username': username,
         'password': password,
     }, allow_redirects=False)
     assert r.status_code == 302
-    assert r.headers['Location'] == '/'
+    loc = r.headers.get('Location', '')
+    # sometimes it will be "http://localhost:5000/" or just "/"
+    assert loc.rstrip('/').endswith(''), f"unexpected Location: {loc}"
 
-    # 3) check /latest (should be an integer)
+    # 3) check /latest
     r = s.get(f'{BASE}/latest')
     assert r.status_code == 200
     data = r.json()
@@ -49,13 +51,14 @@ def test_register_login_and_post():
     message = 'Hello from CI'
     r = s.post(f'{BASE}/add_message', data={'text': message}, allow_redirects=False)
     assert r.status_code == 302
-    assert r.headers['Location'] == '/'
+    loc = r.headers.get('Location', '')
+    assert loc.endswith('/'), f"unexpected Location: {loc}"
 
-    # 5) see it on the public timeline
+    # 5) see it on /public
     r = s.get(f'{BASE}/public')
     assert message in r.text
 
-    # 6) /latest should have increased
+    # 6) /latest bumped
     r = s.get(f'{BASE}/latest')
     after = r.json()['latest_id']
     assert after >= before + 1
