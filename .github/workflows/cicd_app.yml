@@ -40,7 +40,7 @@ jobs:
             promtool check config /etc/prometheus/prometheus.yml
 
       - name: Validate monitoring docker-compose
-        run: docker-compose -f monitoring/docker-compose.yml config -q
+        run: docker compose -f monitoring/docker-compose.yml config -q
 
   lint-app-compose:
     name: Validate App docker-compose
@@ -49,7 +49,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Validate app docker-compose.yml
-        run: docker-compose -f docker-compose.yml config -q
+        run: docker compose -f docker-compose.yml config -q
 
   deploy:
     runs-on: ubuntu-latest
