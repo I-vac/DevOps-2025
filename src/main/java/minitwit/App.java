@@ -29,6 +29,11 @@ public class App {
     // 3️⃣ DB query latency summary (DB instrumentation in Database class)
 
     public static void main(String[] args) throws Exception {
+        // Configure SparkJava
+        port(5000);
+        staticFiles.location("/public");
+        staticFiles.expireTime(600L);
+
         // Start Prometheus HTTP server on metrics port
         String mp = System.getenv("METRICS_PORT");
         int metricsPort = mp != null ? Integer.parseInt(mp) : 9091;
@@ -43,10 +48,6 @@ public class App {
                        .observe(secs);
         });
 
-        // Configure SparkJava
-        port(5000);
-        staticFiles.location("/public");
-        staticFiles.expireTime(600L);
 
         // Database setup
         Database.init();
