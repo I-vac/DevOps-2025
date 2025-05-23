@@ -99,7 +99,7 @@ jobs:
   build-and-test:
     name: Build & Test App Endpoints
     runs-on: ubuntu-latest
-    needs: [lint-java, build-test, lint-docke, lint-shell]
+    needs: [lint-java, build-test, lint-docker, lint-shell]
     if: needs.lint-java.result == 'success' && needs.build-test.result == 'success' && needs.lint-docker.result == 'success' && needs.lint-shell.result == 'success'
     steps:
       - name: Checkout
