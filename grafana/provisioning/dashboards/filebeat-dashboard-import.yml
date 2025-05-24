@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: "Filebeat dashboards"
+    folder: ""
+    type: file
+    options:
+      path: "/usr/share/kibana/config/provisioning/dashboards"

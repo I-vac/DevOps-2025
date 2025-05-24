@@ -9,6 +9,7 @@ services:
       - "9091:9091"     # expose HTTP metrics
     volumes:
       - minitwit-data:/data
+      - minitwit-logs:/data/logs
     environment:
       - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
       - METRICS_PORT=9091
@@ -24,6 +25,7 @@ services:
       - "9092:9091"    # HTTP /metrics (host 9092 → container 9091)
     volumes:
       - minitwit-data:/data
+      - minitwit-logs:/data/logs
     environment:
       - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
       - "9092:9091"    # HTTP /metrics (host 9092 → container 9091)
@@ -49,9 +51,26 @@ services:
       - "8081:8080"      # host 8081 → container 8080
     restart: unless-stopped
 
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.8.2
+    # network_mode: "host"               
+    user: root
+    volumes:
+      - type: bind
+        source: ./filebeat.yml
+        target: /usr/share/filebeat/filebeat.yml
+        read_only: true
+      - minitwit-logs:/data/logs:ro
+    depends_on:
+      - minitwit
+    networks:
+      - default
+
 volumes:
   # bind to your existing volume named "minitwit_minitwit-data"
   minitwit-data:
     external:
       name: minitwit_minitwit-data
     # name: minitwit_minitwit-data
+  minitwit-logs:
+    driver: local
