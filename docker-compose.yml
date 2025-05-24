@@ -53,7 +53,7 @@ services:
 
   filebeat:
     image: docker.elastic.co/beats/filebeat:8.8.2
-    network_mode: "host"               
+    # network_mode: "host"               
     user: root
     volumes:
       - type: bind
@@ -63,12 +63,14 @@ services:
       - minitwit-logs:/data/logs:ro
     depends_on:
       - minitwit
+    networks:
+      - default
 
 volumes:
   # bind to your existing volume named "minitwit_minitwit-data"
   minitwit-data:
-    # external:
-    #   name: minitwit_minitwit-data
-    name: minitwit_minitwit-data
+    external:
+      name: minitwit_minitwit-data
+    # name: minitwit_minitwit-data
   minitwit-logs:
     driver: local
