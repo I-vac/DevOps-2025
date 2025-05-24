@@ -85,28 +85,33 @@ public class App {
 
         // Health check
         get("/health", (req, res) -> {
+            log.info("Health check requested");
             res.type("application/json");
             return new Gson().toJson(Map.of("status", "ok"));
         });
 
         get("/public", (req, res) -> {
+            log.info("Public timeline requested");
             Map<String, Object> model = createModel(req);
             model.put("messages", Database.getPublicTimeline(PER_PAGE));
             return TemplateRenderer.render("timeline", model);
         });
 
         get("/login", (req, res) -> {
+            log.info("Login page requested");
             Map<String, Object> model = createModel(req);
             return TemplateRenderer.render("login", model);
         });
 
         get("/latest", (req, res) -> {
+            log.info("Latest command ID requested");
             int latest = Database.getLatestCommandId();
             res.type("application/json");
             return new Gson().toJson(Map.of("latest_id", latest));
         });
 
         post("/login", (req, res) -> {
+            log.info("Login attempt for user: {}", req.queryParams("username"));
             String username = req.queryParams("username");
             String password = req.queryParams("password");
             Map<String, Object> user = Database.getUserByUsername(username);
@@ -123,11 +128,13 @@ public class App {
         });
 
         get("/register", (req, res) -> {
+            log.info("Register page requested");
             Map<String, Object> model = createModel(req);
             return TemplateRenderer.render("register", model);
         });
 
         post("/register", (req, res) -> {
+            log.info("Registration attempt for user: {}", req.queryParams("username"));
             Map<String, Object> model = createModel(req);
             String username = req.queryParams("username");
             String email = req.queryParams("email");
@@ -156,6 +163,7 @@ public class App {
         });
 
         get("/logout", (req, res) -> {
+            log.info("Logout requested");
             addFlash(req, "You were logged out");
             req.session().removeAttribute("user_id");
             res.redirect("/public");
@@ -163,6 +171,7 @@ public class App {
         });
 
         get("/:username", (req, res) -> {
+            log.info("Profile requested for user: {}", req.params(":username"));
             Map<String, Object> model = createModel(req);
             String username = req.params(":username");
             Map<String, Object> profile = Database.getUserByUsername(username);
@@ -179,6 +188,7 @@ public class App {
         });
 
         get("/:username/follow", (req, res) -> {
+            log.info("Follow request for user: {}", req.params(":username"));
             Integer current = checkAuthenticated(req);
             String username = req.params(":username");
             Map<String, Object> profile = Database.getUserByUsername(username);
@@ -190,6 +200,7 @@ public class App {
         });
 
         get("/:username/unfollow", (req, res) -> {
+            log.info("Unfollow request for user: {}", req.params(":username"));
             Integer current = checkAuthenticated(req);
             String username = req.params(":username");
             Map<String, Object> profile = Database.getUserByUsername(username);
@@ -201,6 +212,7 @@ public class App {
         });
 
         post("/add_message", (req, res) -> {
+            log.info("Add message request from user: {}", req.session().attribute("user_id"));
             Integer user = checkAuthenticated(req);
             String text = req.queryParams("text");
             if (text != null && !text.trim().isEmpty()) {
