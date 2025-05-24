@@ -40,8 +40,46 @@ services:
     ports:
       - "8080:8080"
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.2
+    platform: linux/amd64           # if on ARM; drop if on x86
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.2
+    platform: linux/amd64           # if on ARM
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_HOST=0.0.0.0
+    volumes:
+      - type: bind
+        source: ./kibana.yml
+        target:   /usr/share/kibana/config/kibana.yml
+        read_only: true
+      - type: bind
+        source: ./provisioning
+        target: /usr/share/kibana/config/provisioning
+        read_only: true
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+
 volumes:
   grafana-data:
     driver: local
   prometheus-data:
+    driver: local
+  es-data:
     driver: local

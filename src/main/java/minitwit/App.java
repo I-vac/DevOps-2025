@@ -11,7 +11,13 @@ import io.prometheus.client.Summary;
 import io.prometheus.client.hotspot.DefaultExports;
 import io.prometheus.client.exporter.HTTPServer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 public class App {
+    private static final Logger log = LoggerFactory.getLogger(App.class);
+
     private static final int PER_PAGE = 30;
 
     // 1️⃣ JVM metrics (HotSpot)
@@ -30,6 +36,7 @@ public class App {
 
     public static void main(String[] args) throws Exception {
         // Configure SparkJava
+        log.info("Starting Minitwit on port 5000");
         port(5000);
         staticFiles.location("/public");
         staticFiles.expireTime(600L);
@@ -38,14 +45,20 @@ public class App {
         String mp = System.getenv("METRICS_PORT");
         int metricsPort = mp != null ? Integer.parseInt(mp) : 9091;
         new HTTPServer(metricsPort);
+        log.info("Prometheus HTTP server running on port {}", metricsPort);
 
         // before-after filters for HTTP timing
-        before((req, res) -> req.attribute("startTime", System.nanoTime()));
+        before((req, res) -> {
+            log.debug("→ {} {}", req.requestMethod(), req.pathInfo());
+            req.attribute("startTime", System.nanoTime());
+        });
         afterAfter((req, res) -> {
-            long start = req.attribute("startTime");
+            long start = (Long) req.attribute("startTime");
             double secs = (System.nanoTime() - start) / 1e9;
-            httpLatency.labels(req.requestMethod(), req.pathInfo(), String.valueOf(res.status()))
-                       .observe(secs);
+            log.debug("← {} {} - status={} in {}ms",
+                        req.requestMethod(), req.pathInfo(), res.status(), (int)(secs*1000));
+            httpLatency.labels(req.requestMethod(), req.pathInfo(), 
+                                String.valueOf(res.status())).observe(secs);
         });
 
 
@@ -199,6 +212,7 @@ public class App {
         });
 
         exception(Exception.class, (e, req, res) -> {
+            log.error("Unhandled exception on {} {}", req.requestMethod(), req.pathInfo(), e);
             res.status(500);
             res.body("Internal Server Error: " + e.getMessage());
         });

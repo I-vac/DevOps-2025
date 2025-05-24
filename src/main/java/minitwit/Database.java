@@ -4,7 +4,12 @@ import io.prometheus.client.Summary;
 import java.sql.*;
 import java.util.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 public class Database {
+    private static final Logger log = LoggerFactory.getLogger(Database.class);
     private static Connection connection;
     public static final int PER_PAGE = 30;
 
@@ -31,6 +36,7 @@ public class Database {
     /** Executes a SELECT and returns a list of rows, each row as a Map. */
     public static List<Map<String, Object>> query(String sql, Object... params) {
         long start = System.nanoTime();
+        log.debug("QUERY → {}  params={}", sql, Arrays.toString(params));
         List<Map<String, Object>> results = new ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             for (int i = 0; i < params.length; i++) {
@@ -50,6 +56,7 @@ public class Database {
         } finally {
             double seconds = (System.nanoTime() - start) / 1e9;
             dbLatency.observe(seconds);
+            log.info("Query completed in {} ms", (int)(seconds * 1000));
         }
         return results;
     }
@@ -57,6 +64,7 @@ public class Database {
     /** Executes an INSERT, UPDATE, or DELETE. */
     public static void update(String sql, Object... params) {
         long start = System.nanoTime();
+        log.debug("UPDATE → {}  params={}", sql, Arrays.toString(params));
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             for (int i = 0; i < params.length; i++) {
                 stmt.setObject(i + 1, params[i]);
@@ -67,6 +75,7 @@ public class Database {
         } finally {
             double seconds = (System.nanoTime() - start) / 1e9;
             dbLatency.observe(seconds);
+            log.info("Update completed in {} ms", (int)(seconds * 1000));
         }
     }
 

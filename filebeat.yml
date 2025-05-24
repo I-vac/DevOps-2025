@@ -1,0 +1,13 @@
+filebeat.inputs:
+  - type: log
+    paths:
+      - /data/logs/*.log
+    multiline.pattern: '^\d{4}-\d{2}-\d{2}'
+    multiline.negate: true
+    multiline.match: after
+
+output.elasticsearch:
+  hosts: ["http://localhost:9200"]  # replace localhost with your logging droplet IP
+
+setup.kibana:
+  host: "http://localhost:5601"  # replace <MONITOR_HOST> accordingly
