@@ -63,7 +63,6 @@ services:
     restart: unless-stopped
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      - ELASTICSEARCH_SERVICEACCOUNTTOKEN=AAEAAWVsYXN0aWMva2liYW5hL2tpYmFuYS10b2tlbjpBZ3ZKREV4dlRocTVIby1jTk9lSVhB
       - SERVER_HOST=0.0.0.0
     volumes:
       - type: bind
