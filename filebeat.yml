@@ -11,3 +11,4 @@ output.elasticsearch:
 
 setup.kibana:
   host: "http://68.183.210.76:5601"  # replace <MONITOR_HOST> accordingly
+  
