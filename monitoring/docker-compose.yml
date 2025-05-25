@@ -42,11 +42,11 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.8.2
-    platform: linux/amd64           # if on ARM; drop if on x86
+    # platform: linux/amd64           # if on ARM; drop if on x86
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m   # ↓ limit heap to 256 MiB
     ulimits:
       memlock:
         soft: -1
@@ -58,7 +58,7 @@ services:
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.8.2
-    platform: linux/amd64           # if on ARM
+    # platform: linux/amd64           # if on ARM
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - SERVER_HOST=0.0.0.0
