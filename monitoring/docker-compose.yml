@@ -46,8 +46,10 @@ services:
     restart: unless-stopped
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=false
+      - xpack.security.enabled=true
       - ES_JAVA_OPTS=-Xms256m -Xmx256m   # ↓ limit heap to 256 MiB
+      - xpack.security.enrollment.enabled=true
+      - ELASTIC_PASSWORD=devops123
     ulimits:
       memlock:
         soft: -1
