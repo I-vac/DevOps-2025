@@ -5,6 +5,10 @@ on:
   push:
     branches:
       - feat/monitoring
+    paths:
+      # everthing except the monitoring directory
+      - '!monitoring/**'
+      - '!grafana/**'
 
 jobs:
   test-java:

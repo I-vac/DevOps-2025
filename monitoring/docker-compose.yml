@@ -47,9 +47,9 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=true
-      - ES_JAVA_OPTS=-Xms256m -Xmx256m   # ↓ limit heap to 256 MiB
       - xpack.security.enrollment.enabled=true
       - ELASTIC_PASSWORD=devops123
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m   # ↓ limit heap to 256 MiB
     ulimits:
       memlock:
         soft: -1
@@ -66,6 +66,8 @@ services:
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - SERVER_HOST=0.0.0.0
+      - ELASTICSEARCH_USERNAME=elastic        # ← add this
+      - ELASTICSEARCH_PASSWORD=devops123   # ← add this  
     volumes:
       - type: bind
         source: ./kibana.yml
