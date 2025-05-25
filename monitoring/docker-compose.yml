@@ -46,9 +46,7 @@ services:
     restart: unless-stopped
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=true
-      - ELASTICSEARCH_USERNAME=elastic
-      - ELASTICSEARCH_PASSWORD=devops123
+      - xpack.security.enabled=false
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ulimits:
       memlock:
