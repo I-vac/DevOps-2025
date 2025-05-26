@@ -36,7 +36,7 @@ public class Database {
     /** Executes a SELECT and returns a list of rows, each row as a Map. */
     public static List<Map<String, Object>> query(String sql, Object... params) {
         long start = System.nanoTime();
-        log.debug("QUERY → {}  params={}", sql, Arrays.toString(params));
+        log.info("QUERY → {}  params={}", sql, Arrays.toString(params));
         List<Map<String, Object>> results = new ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             for (int i = 0; i < params.length; i++) {
@@ -64,7 +64,7 @@ public class Database {
     /** Executes an INSERT, UPDATE, or DELETE. */
     public static void update(String sql, Object... params) {
         long start = System.nanoTime();
-        log.debug("UPDATE → {}  params={}", sql, Arrays.toString(params));
+        log.info("UPDATE → {}  params={}", sql, Arrays.toString(params));
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             for (int i = 0; i < params.length; i++) {
                 stmt.setObject(i + 1, params[i]);

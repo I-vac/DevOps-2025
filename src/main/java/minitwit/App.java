@@ -49,13 +49,13 @@ public class App {
 
         // before-after filters for HTTP timing
         before((req, res) -> {
-            log.debug("→ {} {}", req.requestMethod(), req.pathInfo());
+            log.info("→ {} {}", req.requestMethod(), req.pathInfo());
             req.attribute("startTime", System.nanoTime());
         });
         afterAfter((req, res) -> {
             long start = (Long) req.attribute("startTime");
             double secs = (System.nanoTime() - start) / 1e9;
-            log.debug("← {} {} - status={} in {}ms",
+            log.info("← {} {} - status={} in {}ms",
                         req.requestMethod(), req.pathInfo(), res.status(), (int)(secs*1000));
             httpLatency.labels(req.requestMethod(), req.pathInfo(), 
                                 String.valueOf(res.status())).observe(secs);
