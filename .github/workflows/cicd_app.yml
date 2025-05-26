@@ -93,13 +93,13 @@ jobs:
             down --volumes
 
   deploy:
-    name: Deploy Swarm Stack on App droplet
+    name: Deploy to Droplet
     runs-on: ubuntu-latest
     needs: [lint, build-and-test]
     steps:
       - uses: actions/checkout@v3
 
-      - name: Deploy Swarm Stack on App droplet
+      - name: Deploy everything to one droplet
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.DROPLET_APP_HOST }}
@@ -109,14 +109,5 @@ jobs:
             set -e
             cd ~/DevOps-2025
             git pull
-
-            # Build the new images locally
-            docker build -t minitwit-java-app:latest -f Dockerfile .
-            docker build -t minitwit-java-simulator-api:latest -f Dockerfile.api .
-
-            # Ensure the overlay network exists (idempotent)
-            docker network inspect minitwit-net >/dev/null 2>&1 || \
-              docker network create -d overlay minitwit-net
-
-            # Deploy (or update) your Swarm stack
-            docker stack deploy -c stack.yml minitwit
+            docker compose down
+            docker compose up -d --build
