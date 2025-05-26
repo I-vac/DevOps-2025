@@ -12,6 +12,7 @@ on:
 
 jobs:
   deploy:
+    name: Deploy to Droplet Monitoring
     runs-on: ubuntu-latest
 
     steps:
