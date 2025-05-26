@@ -1,0 +1,133 @@
+# stack.yml
+version: "3.8"
+
+###########
+# NETWORK #
+###########
+networks:
+  minitwit-net:
+    driver: overlay
+
+############
+# VOLUMES   #
+############
+volumes:
+  # your existing SQLite data
+  minitwit-data:
+    external:
+      name: minitwit_minitwit-data
+  # application logs
+  minitwit-logs:
+    driver: local
+
+############
+# SERVICES  #
+############
+services:
+
+  ### 1) Minitwit App ###
+  minitwit:
+    image: jlang62/minitwit-java-app:latest
+    ports:
+      - target: 5000
+        published: 5000
+        protocol: tcp
+      - target: 9404
+        published: 9404
+        protocol: tcp
+      - target: 9091
+        published: 9091
+        protocol: tcp
+    volumes:
+      - minitwit-data:/data
+      - minitwit-logs:/data/logs
+    environment:
+      - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+      - METRICS_PORT=9091
+    networks:
+      - minitwit-net
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+
+  ### 2) Simulator API ###
+  simulator-api:
+    image: jlang62/minitwit-java-simulator-api:latest
+    ports:
+      - target: 5001
+        published: 5001
+        protocol: tcp
+      - target: 9404
+        published: 9405    # host 9405 → container 9404
+        protocol: tcp
+      - target: 9091
+        published: 9092    # host 9092 → container 9091
+        protocol: tcp
+    volumes:
+      - minitwit-data:/data
+      - minitwit-logs:/data/logs
+    environment:
+      - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+    networks:
+      - minitwit-net
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+
+  ### 3) Filebeat ###
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.8.2
+    user: root
+    volumes:
+      - type: bind
+        source: ./filebeat.yml
+        target: /usr/share/filebeat/filebeat.yml
+        read_only: true
+      - minitwit-logs:/data/logs:ro
+    depends_on:
+      - minitwit
+    networks:
+      - minitwit-net
+    deploy:
+      mode: global      # one Filebeat per node (optional)
+      restart_policy:
+        condition: on-failure
+
+  ### 4) (Optional) Node Exporter & cAdvisor ###
+  node-exporter-app:
+    image: prom/node-exporter:latest
+    command: ["--path.rootfs=/host"]
+    volumes:
+      - /:/host:ro
+    ports:
+      - target: 9100
+        published: 9101
+        protocol: tcp
+    networks:
+      - minitwit-net
+    deploy:
+      mode: global
+
+  cadvisor-app:
+    image: gcr.io/cadvisor/cadvisor:latest
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - target: 8080
+        published: 8081
+        protocol: tcp
+    networks:
+      - minitwit-net
+    deploy:
+      mode: global
