@@ -11,14 +11,31 @@
         <version>3.5.0</version>
         <executions>
           <execution>
+            <id>shade-app</id>
             <phase>package</phase>
             <goals>
               <goal>shade</goal>
             </goals>
             <configuration>
+              <finalName>minitwit-java-app</finalName>
               <transformers>
                 <transformer>
                   <mainClass>minitwit.App</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+          <execution>
+            <id>shade-simulator-api</id>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <finalName>minitwit-java-simulator-api</finalName>
+              <transformers>
+                <transformer>
+                  <mainClass>minitwit.SimulatorAPI</mainClass>
                 </transformer>
               </transformers>
             </configuration>

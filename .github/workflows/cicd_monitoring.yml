@@ -1,0 +1,36 @@
+name: CI/CD for Monitoring
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/monitoring
+    paths:
+      - 'monitoring/**'
+      - 'grafana/**'
+      - filebeat.yml
+      - '.github/workflows/cicd_monitoring.yml'
+
+jobs:
+  deploy:
+    name: Deploy to Droplet Monitoring
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy everything to one droplet
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.DROPLET_MONITORING_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          key:      ${{ secrets.DROPLET_SSH_KEY_PRIVATE }}
+          script: |
+            set -e
+
+            # 2) Monitoring               
+            cd ~/DevOps-2025/monitoring
+            git pull
+            docker compose down
+            docker compose up -d --build

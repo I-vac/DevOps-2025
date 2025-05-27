@@ -1,5 +1,6 @@
-/home/ivaylo/Desktop/itu-minitwit/src/main/java/minitwit/App.java
-/home/ivaylo/Desktop/itu-minitwit/src/main/java/minitwit/TemplateRenderer.java
-/home/ivaylo/Desktop/itu-minitwit/src/main/java/minitwit/util/DateUtil.java
-/home/ivaylo/Desktop/itu-minitwit/src/main/java/minitwit/Database.java
-/home/ivaylo/Desktop/itu-minitwit/src/main/java/minitwit/util/GravatarUtil.java
+/Users/jesselang/GitHub/ITU/DevNew/src/main/java/minitwit/App.java
+/Users/jesselang/GitHub/ITU/DevNew/src/main/java/minitwit/Database.java
+/Users/jesselang/GitHub/ITU/DevNew/src/main/java/minitwit/SimulatorAPI.java
+/Users/jesselang/GitHub/ITU/DevNew/src/main/java/minitwit/TemplateRenderer.java
+/Users/jesselang/GitHub/ITU/DevNew/src/main/java/minitwit/util/DateUtil.java
+/Users/jesselang/GitHub/ITU/DevNew/src/main/java/minitwit/util/GravatarUtil.java

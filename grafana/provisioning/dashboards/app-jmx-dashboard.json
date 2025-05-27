@@ -1,0 +1,138 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": "-- Grafana --",
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "gnetId": null,
+    "graphTooltip": 0,
+    "id": null,
+    "links": [],
+    "panels": [
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "options": {},
+            "targets": [
+                {
+                    "expr": "rate(process_cpu_seconds_total{job=\"app-jmx\"}[5m])",
+                    "refId": "A"
+                }
+            ],
+            "title": "App CPU Usage (vCPUs)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "percent"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 0
+            },
+            "id": 2,
+            "options": {},
+            "targets": [
+                {
+                    "expr": "(jvm_memory_bytes_used{area=\"heap\"} / jvm_memory_bytes_max{area=\"heap\"}) * 100",
+                    "legendFormat": "Heap %",
+                    "refId": "A"
+                }
+            ],
+            "title": "JVM Heap Usage",
+            "type": "timeseries"
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 8
+            },
+            "id": 3,
+            "options": {},
+            "targets": [
+                {
+                    "expr": "jvm_threads_threads_current{job=\"app-jmx\"}",
+                    "refId": "A"
+                }
+            ],
+            "title": "Live JVM Threads",
+            "type": "timeseries"
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 8
+            },
+            "id": 4,
+            "options": {},
+            "targets": [
+                {
+                    "expr": "rate(jvm_gc_collection_seconds_sum{job=\"app-jmx\"}[5m])",
+                    "legendFormat": "GC pause rate",
+                    "refId": "A"
+                }
+            ],
+            "title": "JVM GC Pause Rate",
+            "type": "timeseries"
+        }
+    ],
+    "refresh": "1m",
+    "schemaVersion": 37,
+    "style": "dark",
+    "tags": [
+        "java",
+        "jmx",
+        "app"
+    ],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "Java Application Metrics",
+    "uid": "app-jmx-dashboard",
+    "version": 1
+}
