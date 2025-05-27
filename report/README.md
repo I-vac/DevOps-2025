@@ -22,3 +22,9 @@ This report documents the design, implementation, operation, and continuous evol
 ```
 
 ---
+
+## 2 System Perspective
+## 3 Process Perspective
+## 4 Reflection Perspective
+
+
