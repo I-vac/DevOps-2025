@@ -84,8 +84,6 @@ services:
         target: /usr/share/filebeat/filebeat.yml
         read_only: true
       - minitwit-logs:/data/logs:ro
-    depends_on:
-      - minitwit-blue
     networks:
       - default
 
