@@ -82,7 +82,7 @@ services:
         read_only: true
       - minitwit-logs:/data/logs:ro
     depends_on:
-      - minitwit
+      - minitwit-blue
     networks:
       - default
 
