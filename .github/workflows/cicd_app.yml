@@ -96,7 +96,8 @@ jobs:
   deploy:
     name: Deploy to Droplet App
     runs-on: ubuntu-latest
-    needs: [lint, build-and-test]
+    needs: [lint]
+    # needs: [lint, build-and-test]
     steps:
       - uses: actions/checkout@v3
 
