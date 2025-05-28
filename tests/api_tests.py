@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import requests
+import uuid
 
 BASE = 'http://localhost:5000'
 
@@ -15,7 +16,7 @@ def test_public_timeline():
 
 def test_register_login_and_post():
     s = requests.Session()
-    username = 'ci_user'
+    username = f'ci_user_{uuid.uuid4().hex[:8]}'
     password = 'supersecret'
     email = 'ci@example.com'
 
