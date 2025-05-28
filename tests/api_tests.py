@@ -45,13 +45,17 @@ def test_register_login_and_post():
     assert 'latest_id' in data and isinstance(data['latest_id'], int)
     before = data['latest_id']
 
-    # 4) post a new message
+    # 4) post a new message (ensure session is authenticated)
+    dashboard = s.get(f'{BASE}/')  # check session status
+    assert dashboard.status_code == 200
+    assert 'Your timeline' in dashboard.text or 'logout' in dashboard.text.lower(), "User might not be logged in"
+
     message = 'Hello from CI'
     r = s.post(f'{BASE}/add_message', data={'text': message}, allow_redirects=False)
-    assert r.status_code == 302
+    assert r.status_code == 302, f"Expected redirect after posting, got {r.status_code} with body: {r.text}"
     loc = r.headers.get('Location', '')
     assert loc.endswith('/'), f"unexpected Location: {loc}"
-
+    
     # 5) see it on /public
     r = s.get(f'{BASE}/public')
     assert message in r.text
