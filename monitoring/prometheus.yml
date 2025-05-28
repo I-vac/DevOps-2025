@@ -11,33 +11,29 @@ scrape_configs:
       - targets: ['68.183.210.76:8080']
 
   - job_name: 'app-jmx'
-    scheme: https
-    tls_config:
-      insecure_skip_verify: true
+    # Removed scheme/tls_config so Prometheus uses plain HTTP
     static_configs:
       - targets:
-          - 'minitwitdevops.live:9404'   # JMX on minitwit
-          - 'minitwitdevops.live:9405'   # JMX on simulator
+          - 'minitwitdevops.live:9404'   # JMX on Minitwit
+          - 'minitwitdevops.live:9405'   # JMX on Simulator
 
   - job_name: 'app-http'
-    scheme: https
-    tls_config:
-      insecure_skip_verify: true
     metrics_path: /metrics
+    # Removed scheme/tls_config; now scraping over HTTP on the correct ports
     static_configs:
       - targets:
-          - 'minitwitdevops.live'
+          - 'minitwitdevops.live:9094'   # blue
+          - 'minitwitdevops.live:9095'   # green
+          - 'minitwitdevops.live:9092'   # simulator
 
   - job_name: 'app-node-exporter'
-    scheme: https
-    tls_config:
-      insecure_skip_verify: true
+    # Removed scheme/tls_config so Prometheus uses plain HTTP
     static_configs:
-      - targets: ['minitwitdevops.live:9101']
+      - targets:
+          - 'minitwitdevops.live:9101'
 
   - job_name: 'app-cadvisor'
-    scheme: https
-    tls_config:
-      insecure_skip_verify: true
+    # Removed scheme/tls_config so Prometheus uses plain HTTP
     static_configs:
-      - targets: ['minitwitdevops.live:8081']
+      - targets:
+          - 'minitwitdevops.live:8081'
