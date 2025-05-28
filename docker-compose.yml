@@ -1,3 +1,6 @@
+
+name: minitwit
+
 services:
   # BLUE VERSION
   minitwit-blue:
@@ -85,8 +88,6 @@ services:
       - minitwit-blue
     networks:
       - default
-
-name: minitwit
 
 volumes:
   minitwit-data:
