@@ -28,42 +28,48 @@ def test_register_login_and_post():
         'password2': password,
     }, allow_redirects=False)
 
-    if r.status_code != 302:
-        print("❌ Registration failed.")
-        print("Status code:", r.status_code)
-        print("Response headers:", r.headers)
-        print("Response body:", r.text)
-    assert r.status_code == 302, f"Expected 302 but got {r.status_code}, body: {r.text}"
-
+    assert r.status_code == 302, f"❌ Registration failed (expected 302): {r.status_code}, body: {r.text}"
     loc = r.headers.get('Location', '')
-    assert loc.endswith('/login'), f"Unexpected Location: {loc}"
+    assert loc.endswith('/login'), f"❌ Unexpected redirect after register: {loc}"
 
-    # 3) check /latest
+    # 2) login → should redirect to /
+    r = s.post(f'{BASE}/login', data={
+        'username': username,
+        'password': password,
+    }, allow_redirects=False)
+
+    assert r.status_code == 302, f"❌ Login failed (expected 302): {r.status_code}, body: {r.text}"
+    loc = r.headers.get('Location', '')
+    assert loc.rstrip('/').endswith(''), f"❌ Unexpected Location after login: {loc}"
+
+    # 3) Confirm user is logged in by visiting /
+    dashboard = s.get(f'{BASE}/')
+    assert dashboard.status_code == 200, f"❌ Dashboard failed: {dashboard.status_code}"
+    assert 'Your timeline' in dashboard.text or 'logout' in dashboard.text.lower(), \
+        f"❌ User might not be logged in. Page content:\n{dashboard.text[:500]}"
+
+    # 4) check /latest
     r = s.get(f'{BASE}/latest')
-    assert r.status_code == 200
+    assert r.status_code == 200, "❌ Failed to fetch /latest"
     data = r.json()
-    assert 'latest_id' in data and isinstance(data['latest_id'], int)
+    assert 'latest_id' in data and isinstance(data['latest_id'], int), f"❌ Invalid /latest response: {data}"
     before = data['latest_id']
 
-    # 4) post a new message (ensure session is authenticated)
-    dashboard = s.get(f'{BASE}/')  # check session status
-    assert dashboard.status_code == 200
-    assert 'Your timeline' in dashboard.text or 'logout' in dashboard.text.lower(), "User might not be logged in"
-
-    message = 'Hello from CI'
+    # 5) post a new message
+    message = f'Hello from CI - {uuid.uuid4().hex[:6]}'
     r = s.post(f'{BASE}/add_message', data={'text': message}, allow_redirects=False)
-    assert r.status_code == 302, f"Expected redirect after posting, got {r.status_code} with body: {r.text}"
+    assert r.status_code == 302, f"❌ Message post failed: {r.status_code} - {r.text}"
     loc = r.headers.get('Location', '')
-    assert loc.endswith('/'), f"unexpected Location: {loc}"
-    
-    # 5) see it on /public
-    r = s.get(f'{BASE}/public')
-    assert message in r.text
+    assert loc.endswith('/'), f"❌ Unexpected Location after message post: {loc}"
 
-    # 6) /latest bumped
+    # 6) confirm it's on /public
+    r = s.get(f'{BASE}/public')
+    assert message in r.text, f"❌ Message not found on /public: {message}"
+
+    # 7) latest_id should bump
     r = s.get(f'{BASE}/latest')
-    after = r.json()['latest_id']
-    assert after >= before + 1
+    after = r.json().get('latest_id')
+    assert after >= before + 1, f"❌ latest_id not bumped: before={before}, after={after}"
 
 if __name__ == '__main__':
     test_health()
