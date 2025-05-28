@@ -18,7 +18,7 @@ def test_register_login_and_post():
     s = requests.Session()
     username = f'ci_user_{uuid.uuid4().hex[:8]}'
     password = 'supersecret'
-    email = 'ci@example.com'
+    email = f'{username}@example.com'
 
     # 1) register → should redirect to /login
     r = s.post(f'{BASE}/register', data={
@@ -27,10 +27,17 @@ def test_register_login_and_post():
         'password': password,
         'password2': password,
     }, allow_redirects=False)
-    assert r.status_code == 302
-    loc = r.headers.get('Location', '')
-    assert loc.endswith('/login'), f"unexpected Location: {loc}"
 
+    if r.status_code != 302:
+        print("❌ Registration failed.")
+        print("Status code:", r.status_code)
+        print("Response headers:", r.headers)
+        print("Response body:", r.text)
+    assert r.status_code == 302, f"Expected 302 but got {r.status_code}, body: {r.text}"
+
+    loc = r.headers.get('Location', '')
+    assert loc.endswith('/login'), f"Unexpected Location: {loc}"
+    
     # 2) login → should redirect to /
     r = s.post(f'{BASE}/login', data={
         'username': username,
