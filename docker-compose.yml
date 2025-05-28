@@ -1,12 +1,32 @@
 services:
-  minitwit:
+  # BLUE VERSION
+  minitwit-blue:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: minitwit-blue
     ports:
-      - "5000:5000"
+      - "5001:5000"  # exposed for NGINX
       - "9404:9404"
-      - "9091:9091"     # expose HTTP metrics
+      - "9091:9091"
+    volumes:
+      - minitwit-data:/data
+      - minitwit-logs:/data/logs
+    environment:
+      - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+      - METRICS_PORT=9091
+    restart: always
+
+  # GREEN VERSION
+  minitwit-green:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: minitwit-green
+    ports:
+      - "5002:5000"
+      - "9406:9404"
+      - "9093:9091"
     volumes:
       - minitwit-data:/data
       - minitwit-logs:/data/logs

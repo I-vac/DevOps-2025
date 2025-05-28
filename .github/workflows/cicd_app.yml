@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - feat/availability
 
 jobs:
   test-java:
@@ -99,7 +100,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Deploy everything to one droplet
+      - name: Blue-Green Deploy to App Droplet
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.DROPLET_APP_HOST }}
@@ -109,5 +110,30 @@ jobs:
             set -e
             cd ~/DevOps-2025
             git pull
-            docker compose down
-            docker compose up -d --build
+
+            # Determine currently live version
+            CURRENT=$(readlink -f /etc/nginx/minitwit-backend.conf | grep -oE 'blue|green')
+            if [ "$CURRENT" = "blue" ]; then
+              TARGET="green"
+              PORT=5002
+            else
+              TARGET="blue"
+              PORT=5001
+            fi
+
+            echo "Deploying new version to $TARGET (port $PORT)..."
+
+            # Build and start target version
+            docker compose build minitwit-$TARGET
+            docker compose up -d --no-deps --remove-orphans minitwit-$TARGET
+
+            # Health check
+            timeout 60 bash -c "until curl -sf http://localhost:$PORT/health | grep -q 'ok'; do echo 'Waiting for app...'; sleep 5; done"
+
+            # Switch NGINX to new version
+            sudo ln -sf /etc/nginx/minitwit-backend-$TARGET.conf /etc/nginx/minitwit-backend.conf
+            sudo nginx -s reload
+
+            # Stop old version
+            docker stop minitwit-$CURRENT || true
+            docker rm minitwit-$CURRENT || true
