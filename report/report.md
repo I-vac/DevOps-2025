@@ -27,6 +27,132 @@ This report documents the design, implementation, operation, and continuous evol
 
 ## 3 Process Perspective
 
+### ✅ CI/CD Pipeline Overview
+
+**Tools Used:**
+
+* **GitHub Actions**: CI/CD orchestration
+* **Docker Compose**: Service definitions and environment management
+* **Maven**: Java build and testing
+* **Python (requests)**: API endpoint tests
+* **SSH Deploy (appleboy/ssh-action)**: Remote deployment to Droplet
+
+**Stages:**
+
+1. **`test-java`** – Java Unit Testing:
+
+   * Build the simulator backend using Maven
+   * Runs unit tests with `mvn clean test`
+
+2. **`lint`** – Config Validation:
+
+   * Validates `docker-compose.yml` and monitoring configs
+
+3. **`build-and-test`** – Integration Testing:
+
+   * Builds `minitwit` and `simulator-api`
+   * Runs in isolated throwaway containers using test-only volumes
+   * Waits for the health endpoint (`/health`)
+   * Runs **functional API tests** (register/login/post timeline)
+
+4. **`deploy`** – Blue-Green Deployment:
+
+   * Pulls new code on the Droplet
+   * Builds and deploys to the *inactive* version (blue or green)
+   * Runs health checks on the new container
+   * Swaps NGINX config symlink
+   * Gracefully stops and removes the previous version
+
+---
+
+### 📊 Monitoring Strategy
+
+**Tools Used:**
+
+* **Prometheus**: Metrics scraping
+* **Grafana** (implied for dashboards)
+* **cAdvisor**: Container-level CPU, memory, I/O metrics
+* **Node Exporter**: OS-level system metrics
+* **Custom App Metrics**:
+
+  * HTTP latency (per route)
+  * DB query latency
+
+**Prometheus Targets:**
+
+* `app-http`: HTTP metrics from `minitwit` and `simulator-api`
+* `app-jmx`: JVM metrics (on separate ports)
+* `cadvisor` and `node-exporter`: Docker and system stats
+* All targets use HTTPS with `insecure_skip_verify` (certs used but not CA-signed)
+
+---
+
+### 📋 Logging and Aggregation
+
+**Logging Strategy:**
+
+* All services log to `/data/logs/*.log` (volume-mounted)
+* Logs are in **multiline timestamped format** (`^\d{4}-\d{2}-\d{2}`) for correct aggregation
+
+**Aggregation:**
+
+* **Filebeat** collects logs from all services via shared volume `minitwit-logs`
+* Filebeat forwards logs to **Elasticsearch**
+* **Kibana** used for exploration and visualization
+
+---
+
+### 🔒 Security Assessment Summary
+
+**Findings:**
+
+* Session-based login with bcrypt password hashing ✅
+* Input validation on forms ✅
+* SQL injection protection via prepared statements ✅
+* Partial XSS protection (Freemarker templates escape by default) ⚠️
+* No CSRF or rate limiting implemented ❌
+
+**Hardening Steps Taken:**
+
+* **BCrypt** used for secure password storage
+* Session timeout set (300s)
+* Input validation during registration/login
+* HTTPS enforced via NGINX + Certbot
+* NGINX denies access to direct port 80 (auto-redirects to HTTPS)
+* Docker containers run with restart policies and logs are centralized
+
+**Future Hardening Suggestions:**
+
+* Add CSRF tokens on forms
+* Rate-limit failed login attempts
+* Explicitly escape all template variables
+
+---
+
+### 📦 Scaling and Upgrade Strategy
+
+**Strategy:**
+
+* **Blue-Green Deployment** implemented:
+
+  * Two identical service definitions (`minitwit-blue`, `minitwit-green`)
+  * NGINX switches between them via symlinked config
+  * Ensures zero downtime
+  * Rollbacks are instant by swapping symlink back
+
+**Scaling:**
+
+* Shared Docker volumes used for data and logs
+* Metrics and logs are centralized and decoupled from app containers
+* With containerization, horizontal scaling is trivial (can spin up more app containers behind a load balancer)
+
+**Upgrade Notes:**
+
+* Every deployment builds a fresh image from Dockerfile
+* Health checks (`/health`) used to verify readiness before switching traffic
+* Deprecated containers are cleaned up post-deployment
+
+
 ## 4 Reflection Perspective
 
 ---
