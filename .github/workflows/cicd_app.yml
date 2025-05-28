@@ -115,10 +115,10 @@ jobs:
             CURRENT=$(readlink -f /etc/nginx/minitwit-backend.conf | grep -oE 'blue|green')
             if [ "$CURRENT" = "blue" ]; then
               TARGET="green"
-              PORT=5002
+              PORT=5005
             else
               TARGET="blue"
-              PORT=5001
+              PORT=5004
             fi
 
             echo "Deploying new version to $TARGET (port $PORT)..."

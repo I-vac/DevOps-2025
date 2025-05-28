@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     container_name: minitwit-blue
     ports:
-      - "5001:5000"  # exposed for NGINX
+      - "5004:5000"  # exposed for NGINX
       - "9404:9404"
       - "9091:9091"
     volumes:
@@ -24,7 +24,7 @@ services:
       dockerfile: Dockerfile
     container_name: minitwit-green
     ports:
-      - "5002:5000"
+      - "5005:5000"
       - "9406:9404"
       - "9093:9091"
     volumes:
