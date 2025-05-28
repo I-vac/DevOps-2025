@@ -22,18 +22,24 @@ A **blue-green strategy** is enforced at the container layer: two identical back
 
 ## 1.2 Technology & Tool Dependencies
 
-| Layer         | Technology / Tool                                                | Purpose                                                                                                                    |
-| ------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Cloud         | **DigitalOcean Droplets & VPC**                                  | Low‑friction IaaS, cheap static IPv4, private networking                                                                   |
-| Runtime       | **Java 21 (Temurin)**                                            | Virtual threads (Project Loom), LTS support                                                                                |
-| Build         | **Maven 3.9**                                                    | Deterministic builds, Surefire & SpotBugs plugins                                                                          |
-| Pack/Run      | **Docker + Docker Compose**                                      | Environment parity, blue‑green pattern (services *minitwit‑blue*, *minitwit‑green*, *simulator‑api*)  |
-| Data          | **SQLite**                                                       | Zero‑ops DB, WAL for write concurrency                                                                                     |
-| Observability | **Prometheus**, **Grafana**, **JMX exporter**, **/metrics** HTTP | Metrics scrape & dashboards                                                                           |
-| Logs          | **Filebeat**, **Elasticsearch**, **Kibana**                      | Structured log shipping & search                                                                      |
-| Infra metrics | **node‑exporter**, **cAdvisor**                                  | Host & container resource usage                                                                                            |
-| CI/CD         | **GitHub Actions**, **appleboy/ssh‑action**                      | Build, test, push, blue‑green deploy                                                                 |
-| IaC           | **docker‑compose.yml (app & monitoring)**                        | Declarative stack definition                                                        |
+| Layer                      | Technology / Tool                                       | Purpose                                                                     |
+| -------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------- |
+| **Cloud & Infra**          | DigitalOcean Droplets & VPC                             | Low‑friction IaaS, static IPv4, private networking                          |
+| **Runtime**                | Java 21 (Temurin)                                       | Virtual threads (Project Loom), LTS support                                 |
+| **Web Framework**          | SparkJava 2.9                                           | Lightweight functional HTTP routing                    |
+| **Templating**             | Freemarker                                              | Server‑side HTML rendering                             |
+| **JSON**                   | Gson                                                    | JSON marshalling/parsing                               |
+| **Security libs**          | jBCrypt                                                 | Password hashing                                       |
+| **Logging**                | SLF4J + Logback                                         | Structured JSON logs                                                        |
+| **Metrics client**         | Prometheus Java client & JMX agent 0.18                 | JVM & HTTP metric exposition                          |
+| **Data**                   | SQLite (WAL)                                            | Zero‑ops DB, write concurrency                                              |
+| **Containerisation**       | Docker + Docker Compose                                 | Environment parity, blue‑green pattern               |
+| **Observability platform** | Prometheus, Grafana, node‑exporter, cAdvisor            | Metrics scrape & dashboards                            |
+| **Log stack**              | Filebeat, Elasticsearch, Kibana                         | Structured log shipping & search                      |
+| **Build & Test**           | Maven 3.9, JUnit 5, Rest‑Assured, SpotBugs, Checkstyle  | Deterministic builds, unit/API tests, static analysis  |
+| **Security tooling**       | OWASP dependency‑check, Trivy                           | Dependency & container CVE scans                                            |
+| **CI/CD**                  | GitHub Actions, appleboy/ssh‑action                     | Build, test, push, blue‑green deploy                  |
+| **Infrastructure‑as‑Code** | docker‑compose.yml (app), monitoring/docker‑compose.yml | Declarative stack definition                |
 
 
 ## 1.3 Subsystem Interactions
