@@ -55,19 +55,10 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Build & run on throw-away test volume
+      - name: Build & run on test stack only
         run: |
-          # build both images
-          docker compose \
-            -f docker-compose.yml \
-            -f docker-compose.test.yml \
-            build minitwit simulator-api
-
-          # stand them up on a fresh test volume
-          docker compose \
-            -f docker-compose.yml \
-            -f docker-compose.test.yml \
-            up -d
+          docker compose -f docker-compose.test.yml build
+          docker compose -f docker-compose.test.yml up -d
 
       - name: Wait for `/health`
         run: |
@@ -87,11 +78,7 @@ jobs:
         run: python3 tests/api_tests.py
 
       - name: Tear down
-        run: |
-          docker compose \
-            -f docker-compose.yml \
-            -f docker-compose.test.yml \
-            down --volumes
+        run: docker compose -f docker-compose.test.yml down --volumes
 
   deploy:
     name: Deploy to Droplet App
@@ -112,29 +99,32 @@ jobs:
             cd ~/DevOps-2025
             git pull
 
-            CURRENT=$(readlink -f /etc/nginx/minitwit-backend.conf | grep -oE 'blue|green')
+            echo "🧹 Cleaning up old legacy containers..."
+            docker ps -a --format '{{.Names}}' | grep -E '(^|_)devops-2025-minitwit(-1)?$' | xargs -r docker rm -f || true
 
+            echo "🔍 Determining currently active version..."
+            CURRENT=$(readlink -f /etc/nginx/minitwit-backend.conf | grep -oE 'blue|green')
             if [ "$CURRENT" = "blue" ]; then
               TARGET="green"
-              APP_PORT=5005
-              METRICS_PORT=9095
+              PORT=5005
             else
               TARGET="blue"
-              APP_PORT=5004
-              METRICS_PORT=9094
+              PORT=5004
             fi
 
-            echo "Deploying new version to $TARGET (app: $APP_PORT, metrics: $METRICS_PORT)..."
-  
+            echo "🚀 Deploying new version to $TARGET on port $PORT..."
             docker compose -f docker-compose.yml build minitwit-$TARGET
             docker compose -f docker-compose.yml up -d --no-deps --remove-orphans minitwit-$TARGET
 
-            timeout 60 bash -c "until curl -sf http://localhost:$APP_PORT/health | grep -q 'ok'; do echo 'Waiting for app...'; sleep 5; done"
+            echo "🧪 Waiting for health check on port $PORT..."
+            timeout 60 bash -c "until curl -sf http://localhost:$PORT/health | grep -q 'ok'; do echo 'Waiting for app...'; sleep 5; done"
 
-            # Switch app and metrics NGINX routing
+            echo "🔁 Switching NGINX to new version..."
             sudo ln -sf /etc/nginx/minitwit-backend-$TARGET.conf /etc/nginx/minitwit-backend.conf
-            sudo ln -sf /etc/nginx/minitwit-metrics-$TARGET.conf /etc/nginx/minitwit-metrics.conf
-            sudo nginx -s reload
+            sudo nginx -t && sudo nginx -s reload
 
+            echo "🧼 Cleaning up previous version ($CURRENT)..."
             docker stop minitwit-$CURRENT || true
             docker rm minitwit-$CURRENT || true
+
+            echo "✅ Deployment complete."
