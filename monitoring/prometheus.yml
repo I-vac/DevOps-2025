@@ -24,7 +24,6 @@ scrape_configs:
       - targets:
           - 'minitwitdevops.live:9094'   # blue
           - 'minitwitdevops.live:9095'   # green
-          - 'minitwitdevops.live:9092'   # simulator
 
   - job_name: 'app-node-exporter'
     # Removed scheme/tls_config so Prometheus uses plain HTTP
