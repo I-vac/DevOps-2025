@@ -55,10 +55,17 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Build & run on test stack only
+      - name: Build & run on throw-away test volume
         run: |
-          docker compose -f docker-compose.test.yml build
-          docker compose -f docker-compose.test.yml up -d
+          # build both images
+          docker compose \
+            -f docker-compose.test.yml \
+            build minitwit simulator-api
+
+          # stand them up on a fresh test volume
+          docker compose \
+            -f docker-compose.test.yml \
+            up -d
 
       - name: Wait for `/health`
         run: |
@@ -78,7 +85,11 @@ jobs:
         run: python3 tests/api_tests.py
 
       - name: Tear down
-        run: docker compose -f docker-compose.test.yml down --volumes
+        run: |
+          docker compose \
+            -f docker-compose.test.yml \
+            down --volumes
+
 
   deploy:
     name: Deploy to Droplet App

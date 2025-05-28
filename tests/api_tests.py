@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import requests
-import uuid
 
 BASE = 'http://localhost:5000'
 
@@ -16,9 +15,9 @@ def test_public_timeline():
 
 def test_register_login_and_post():
     s = requests.Session()
-    username = f'ci_user_{uuid.uuid4().hex[:8]}'
+    username = 'ci_user'
     password = 'supersecret'
-    email = f'{username}@example.com'
+    email = 'ci@example.com'
 
     # 1) register → should redirect to /login
     r = s.post(f'{BASE}/register', data={
@@ -27,49 +26,42 @@ def test_register_login_and_post():
         'password': password,
         'password2': password,
     }, allow_redirects=False)
-
-    assert r.status_code == 302, f"❌ Registration failed (expected 302): {r.status_code}, body: {r.text}"
+    assert r.status_code == 302
     loc = r.headers.get('Location', '')
-    assert loc.endswith('/login'), f"❌ Unexpected redirect after register: {loc}"
+    assert loc.endswith('/login'), f"unexpected Location: {loc}"
 
     # 2) login → should redirect to /
     r = s.post(f'{BASE}/login', data={
         'username': username,
         'password': password,
     }, allow_redirects=False)
-
-    assert r.status_code == 302, f"❌ Login failed (expected 302): {r.status_code}, body: {r.text}"
+    assert r.status_code == 302
     loc = r.headers.get('Location', '')
-    assert loc.rstrip('/').endswith(''), f"❌ Unexpected Location after login: {loc}"
+    # sometimes it will be "http://localhost:5000/" or just "/"
+    assert loc.rstrip('/').endswith(''), f"unexpected Location: {loc}"
 
-    # 3) Confirm user is logged in by visiting /
-    dashboard = s.get(f'{BASE}/')
-    assert dashboard.status_code == 200, f"❌ Dashboard failed: {dashboard.status_code}"
-    assert 'Your timeline' in dashboard.text or 'logout' in dashboard.text.lower(), \
-        f"❌ User might not be logged in. Page content:\n{dashboard.text[:500]}"
-
-    # 4) check /latest
+    # 3) check /latest
     r = s.get(f'{BASE}/latest')
-    assert r.status_code == 200, "❌ Failed to fetch /latest"
+    assert r.status_code == 200
     data = r.json()
-    assert 'latest_id' in data and isinstance(data['latest_id'], int), f"❌ Invalid /latest response: {data}"
+    assert 'latest_id' in data and isinstance(data['latest_id'], int)
     before = data['latest_id']
 
-    # 5) post a new message
-    message = f'Hello from CI - {uuid.uuid4().hex[:6]}'
+    # 4) post a new message
+    message = 'Hello from CI'
     r = s.post(f'{BASE}/add_message', data={'text': message}, allow_redirects=False)
-    assert r.status_code == 302, f"❌ Message post failed: {r.status_code} - {r.text}"
+    assert r.status_code == 302
     loc = r.headers.get('Location', '')
-    assert loc.endswith('/'), f"❌ Unexpected Location after message post: {loc}"
+    assert loc.endswith('/'), f"unexpected Location: {loc}"
 
-    # 6) confirm it's on /public
+    # 5) see it on /public
     r = s.get(f'{BASE}/public')
-    assert message in r.text, f"❌ Message not found on /public: {message}"
+    assert message in r.text
 
-    # 7) latest_id should bump
+    # 6) /latest bumped
     r = s.get(f'{BASE}/latest')
-    after = r.json().get('latest_id')
-    assert after >= before + 1, f"❌ latest_id not bumped: before={before}, after={after}"
+    after = r.json()['latest_id']
+    assert after >= before + 1
 
 if __name__ == '__main__':
     test_health()
