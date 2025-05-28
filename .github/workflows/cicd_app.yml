@@ -108,28 +108,30 @@ jobs:
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY_PRIVATE }}
           script: |
-            set -e
-            cd ~/DevOps-2025
-            git pull
-
             CURRENT=$(readlink -f /etc/nginx/minitwit-backend.conf | grep -oE 'blue|green')
+
             if [ "$CURRENT" = "blue" ]; then
               TARGET="green"
-              PORT=5005
+              APP_PORT=5005
+              METRICS_PORT=9095
             else
               TARGET="blue"
-              PORT=5004
+              APP_PORT=5004
+              METRICS_PORT=9094
             fi
 
-            echo "Deploying new version to $TARGET (port $PORT)..."
+            echo "Deploying new version to $TARGET (app: $APP_PORT, metrics: $METRICS_PORT)..."
 
             docker compose -f docker-compose.yml build minitwit-$TARGET
             docker compose -f docker-compose.yml up -d --no-deps --remove-orphans minitwit-$TARGET
 
-            timeout 60 bash -c "until curl -sf http://localhost:$PORT/health | grep -q 'ok'; do echo 'Waiting for app...'; sleep 5; done"
+            timeout 60 bash -c "until curl -sf http://localhost:$APP_PORT/health | grep -q 'ok'; do echo 'Waiting for app...'; sleep 5; done"
 
+            # Switch app and metrics NGINX routing
             sudo ln -sf /etc/nginx/minitwit-backend-$TARGET.conf /etc/nginx/minitwit-backend.conf
+            sudo ln -sf /etc/nginx/minitwit-metrics-$TARGET.conf /etc/nginx/minitwit-metrics.conf
             sudo nginx -s reload
 
             docker stop minitwit-$CURRENT || true
             docker rm minitwit-$CURRENT || true
+

@@ -11,7 +11,7 @@ services:
     ports:
       - "5004:5000"  # exposed for NGINX
       - "9404:9404"
-      - "9091:9091"
+      - "9094:9091"
     volumes:
       - minitwit-data:/data
       - minitwit-logs:/data/logs
@@ -29,7 +29,7 @@ services:
     ports:
       - "5005:5000"
       - "9406:9404"
-      - "9093:9091"
+      - "9095:9091"
     volumes:
       - minitwit-data:/data
       - minitwit-logs:/data/logs

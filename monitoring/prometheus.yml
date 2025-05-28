@@ -20,14 +20,13 @@ scrape_configs:
           - 'minitwitdevops.live:9405'   # JMX on simulator
 
   - job_name: 'app-http'
-    scheme: https                # ← switch to HTTPS
+    scheme: https
     tls_config:
-      insecure_skip_verify: true # ← if you don’t have a CA-signed cert yet
+      insecure_skip_verify: true
     metrics_path: /metrics
     static_configs:
       - targets:
-          - 'minitwitdevops.live:9091'
-          - 'minitwitdevops.live:9092'
+          - 'minitwitdevops.live'
 
   - job_name: 'app-node-exporter'
     scheme: https
