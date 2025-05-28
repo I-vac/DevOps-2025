@@ -86,11 +86,12 @@ services:
     networks:
       - default
 
+name: minitwit
+
 volumes:
-  # bind to your existing volume named "minitwit_minitwit-data"
   minitwit-data:
-    external:
-      name: minitwit_minitwit-data
-    # name: minitwit_minitwit-data
+    external: true
+    name: minitwit_minitwit-data
   minitwit-logs:
-    driver: local
+    external: true
+    name: minitwit_minitwit-logs
