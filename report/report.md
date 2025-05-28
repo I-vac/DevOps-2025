@@ -2,32 +2,69 @@
 
 *MSc Group N* — Spring 2025 ⁄ jnol@itu.dk & ivni@itu.dk
 
-> **Note:** All diagrams are rendered from embedded **PlantUML** sources by the Pandoc + `--filter pandoc-plantuml` step in the CI job.
+---
+# 1. System’s Perspective
+
+## 1.1 Architecture Overview
+
+The ITU-MiniTwit platform is **fully hosted on DigitalOcean** and embraces a containerised micro-service pattern managed via Docker Compose.  Two dedicated droplets implement a **classic split-brain topology**:
+
+| Droplet         | Public IP       | Role                    | Main containers                                                                                             |
+| --------------- | --------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **app-prod-01** | `161.35.71.145` | User-facing application | `nginx`, `minitwit-blue`, `minitwit-green`, `simulator-api`                                                 |
+| **mon-prod-01** | `68.183.210.76` | Observability stack     | `prometheus`, `grafana`, `elasticsearch`, `kibana`, `filebeat`, `alertmanager`, `node-exporter`, `cadvisor` |
+
+A **blue-green strategy** is enforced at the container layer: two identical backend containers run in parallel; a `/etc/nginx/conf.d/upstream.conf` symlink determines which revision receives live traffic.  State is isolated in a named Docker volume holding **SQLite** (WAL + shared-cache mode).  Structured JSON logs are mounted into `/var/lib/minitwit/logs`; `filebeat.yml` harvests and ships lines over the VPC to Elasticsearch.
+
+### 1.1.1 Component Diagram (PlantUML)
+<!-- image -->
+> **Figure 1.** Logical architecture, deployment footprint and cross-droplet flows.
+
+## 1.2 Technology & Tool Dependencies
+
+| Layer         | Technology / Tool                                                | Purpose                                                                                                                    |
+| ------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Cloud         | **DigitalOcean Droplets & VPC**                                  | Low‑friction IaaS, cheap static IPv4, private networking                                                                   |
+| Runtime       | **Java 21 (Temurin)**                                            | Virtual threads (Project Loom), LTS support                                                                                |
+| Build         | **Maven 3.9**                                                    | Deterministic builds, Surefire & SpotBugs plugins                                                                          |
+| Pack/Run      | **Docker + Docker Compose**                                      | Environment parity, blue‑green pattern (services *minitwit‑blue*, *minitwit‑green*, *simulator‑api*)  |
+| Data          | **SQLite**                                                       | Zero‑ops DB, WAL for write concurrency                                                                                     |
+| Observability | **Prometheus**, **Grafana**, **JMX exporter**, **/metrics** HTTP | Metrics scrape & dashboards                                                                           |
+| Logs          | **Filebeat**, **Elasticsearch**, **Kibana**                      | Structured log shipping & search                                                                      |
+| Infra metrics | **node‑exporter**, **cAdvisor**                                  | Host & container resource usage                                                                                            |
+| CI/CD         | **GitHub Actions**, **appleboy/ssh‑action**                      | Build, test, push, blue‑green deploy                                                                 |
+| IaC           | **docker‑compose.yml (app & monitoring)**                        | Declarative stack definition                                                        |
+
+
+## 1.3 Subsystem Interactions
+
+### 1.3.1 End-user HTTP request
+<!-- image -->
+
+### 1.3.2 Simulator request path
+<!-- image -->
+
+## 1.4 Current System State & Quality Metrics
+??
+
+
+## 1.5 Rationale for Technology Choices (MSc)
+
+1. **Java 21 LTS** – Virtual threads reduce thread-per-req overhead, ensure future-proof support.
+2. **Docker/Compose** – Reproducible local dev & prod, blue-green implemented via container labels + NGINX.
+3. **SQLite** – Meets workload (< 500 req/s), zero-maintenance, mitigated via WAL + pool.
+4. **Prometheus/Grafana** – Open, query-flexible, no external latency.
+5. **ELK** – Full-text debugging faster than Loki; Filebeat lightweight.
+6. **DigitalOcean** – Simpler pricing vs. AWS, gives floating IPs & VPC out-of-box.
+7. **GitHub Actions** – SaaS runners, secrets ephemeral, direct SSH deploy fits blue-green pattern.
 
 ---
 
-## 1  Introduction
+# 2. Process Perspective
 
-This report documents the design, implementation, operation, and continuous evolution of our **ITU‑MiniTwit** system.
+## 2.1 CI/CD Pipeline (GitHub Actions)
 
-```
-/DevOps‑2025
- ├─ report/
- │   ├─ report.md          ← this file
- │   └─ build/*.pdf        ← CI artefact
- ├─ src/                   ← Java source (MiniTwit)
- ├─ docker‑compose.yml     ← App stack
- ├─ monitoring/            ← Observability stack
- └─ .github/workflows/     ← CI/CD
-```
-
----
-
-## 2 System Perspective
-
-## 3 Process Perspective
-
-### ✅ CI/CD Pipeline Overview
+<!-- image -->
 
 **Tools Used:**
 
@@ -62,6 +99,34 @@ This report documents the design, implementation, operation, and continuous evol
    * Runs health checks on the new container
    * Swaps NGINX config symlink
    * Gracefully stops and removes the previous version
+
+## 2.3 Monitoring & Alerting
+
+* **Metrics** – Prometheus scrapes:
+
+  * `/metrics` (application),
+  * JMX exporter (JVM internals),
+  * node‑exporter & cAdvisor (host / container).
+* **Dashboards** – Grafana boards: *Service Latency*, *Simulator Throughput*, *Droplet Overview*.
+* **Alerts** – Alertmanager routes *P95 latency > 300 ms 5 m* or *error‑rate > 2 %* to Slack; PagerDuty escalation for uptime < 99.5 %.
+
+## 2.4 Logging & Aggregation
+
+* **Log Format** – Logback JSON encoder (timestamp, level, traceId, userId, message).
+* **Collection** – Filebeat side‑car tails `/var/lib/minitwit/logs/*.log`.
+* **Indexing** – Elasticsearch ILM keeps 7 d hot, 21 d warm, 30 d delete; < 4 GB/day.
+* **Visualisation** – Kibana saved searches: *Failed‑Login Attempts*, *Top 10 slow queries*.
+
+## 2.5 Security Hardening
+??
+
+## 2.6 Scaling & Upgrades Strategy
+
+??
+
+# 3. Reflection Perspective
+
+??
 
 ---
 
