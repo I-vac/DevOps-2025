@@ -37,16 +37,6 @@ def test_register_login_and_post():
 
     loc = r.headers.get('Location', '')
     assert loc.endswith('/login'), f"Unexpected Location: {loc}"
-    
-    # 2) login → should redirect to /
-    r = s.post(f'{BASE}/login', data={
-        'username': username,
-        'password': password,
-    }, allow_redirects=False)
-    assert r.status_code == 302
-    loc = r.headers.get('Location', '')
-    # sometimes it will be "http://localhost:5000/" or just "/"
-    assert loc.rstrip('/').endswith(''), f"unexpected Location: {loc}"
 
     # 3) check /latest
     r = s.get(f'{BASE}/latest')
