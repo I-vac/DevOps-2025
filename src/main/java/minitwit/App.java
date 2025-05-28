@@ -4,6 +4,8 @@ import static spark.Spark.*;
 import spark.Request;
 import spark.Response;
 import java.util.*;
+
+import org.eclipse.jetty.server.session.Session;
 import org.mindrot.jbcrypt.BCrypt;
 import com.google.gson.Gson;
 
@@ -97,6 +99,7 @@ public class App {
 
         get("/login", (req, res) -> {
             Map<String, Object> model = createModel(req);
+            model.put("csrf_token", req.session().attribute("csrf_token"));
             return TemplateRenderer.render("login", model);
         });
 
@@ -107,11 +110,28 @@ public class App {
         });
 
         post("/login", (req, res) -> {
+            String formToken = req.queryParams("csrf_token");
+            String sessionToken = req.session().attribute("csrf_token");
+            if (formToken == null || !formToken.equals(sessionToken)){
+                halt(403, "Invalid CSRF Token");
+            }
+
             String username = req.queryParams("username");
             String password = req.queryParams("password");
             Map<String, Object> user = Database.getUserByUsername(username);
             if (user != null && BCrypt.checkpw(password, (String) user.get("pw_hash"))) {
-                req.session().attribute("user_id", user.get("user_id"));
+                spark.Session oldSession = req.session();
+                Map<String, Object> attrs = new HashMap<>();
+                for (String name: oldSession.attributes()){
+                    attrs.put(name, oldSession.attribute(name));
+                }
+                oldSession.invalidate();
+
+                spark.Session newSession = req.session(true);
+                for (Map.Entry<String, Object> entry : attrs.entrySet()){
+                    newSession.attribute(entry.getKey(), entry.getValue());
+                }
+                newSession.attribute("user_id", user.get("user_id"));
                 addFlash(req, "You were logged in");
                 res.redirect("/");
                 return null;
@@ -124,10 +144,19 @@ public class App {
 
         get("/register", (req, res) -> {
             Map<String, Object> model = createModel(req);
+            String csrfToken = UUID.randomUUID().toString();
+            req.session().attribute("csrf_token", csrfToken);
+            model.put("csrf_token", csrfToken);
             return TemplateRenderer.render("register", model);
         });
 
         post("/register", (req, res) -> {
+            String formToken = req.queryParams("csrf_token");
+            String sessionToken = req.session().attribute("csrf_token");
+            if (formToken == null || !formToken.equals(sessionToken)){
+                halt(403, "Invalid CSRF Token");
+            }
+            
             Map<String, Object> model = createModel(req);
             String username = req.queryParams("username");
             String email = req.queryParams("email");
@@ -158,6 +187,7 @@ public class App {
         get("/logout", (req, res) -> {
             addFlash(req, "You were logged out");
             req.session().removeAttribute("user_id");
+            req.session().invalidate();
             res.redirect("/public");
             return null;
         });
@@ -172,6 +202,7 @@ public class App {
             if (current != null) {
                 followed = Database.isFollowing(current, (Integer) profile.get("user_id"));
             }
+            model.put("csrf_token", req.session().attribute("csrf_token"));
             model.put("profile_user", profile);
             model.put("followed", followed);
             model.put("messages", Database.getUserTimeline((Integer) profile.get("user_id"), PER_PAGE));
@@ -202,6 +233,11 @@ public class App {
 
         post("/add_message", (req, res) -> {
             Integer user = checkAuthenticated(req);
+            String formToken = req.queryParams("csrf_token");
+            String sessionToken = req.session().attribute("csrf_token");
+            if(formToken == null || !formToken.equals(sessionToken)){
+                halt(403, "Invalid CSRF Token");
+            }
             String text = req.queryParams("text");
             if (text != null && !text.trim().isEmpty()) {
                 Database.createMessage(user, text.trim(), System.currentTimeMillis()/1000);
