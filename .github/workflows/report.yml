@@ -22,16 +22,17 @@ jobs:
       - name: Build report PDF with Pandoc
         run: |
           pandoc report/report.md \
-            --from gfm+yaml_metadata_block+pipe_tables \
+            --from=gfm+yaml_metadata_block+pipe_tables \
+            --resource-path=report:report/diagrams/pdf \
             --pdf-engine=xelatex \
             --output report/ITU-MiniTwit-Report.pdf
-  
+
       - name: Upload PDF as workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: ITU-MiniTwit-Report
           path: report/ITU-MiniTwit-Report.pdf
-  
+
       - name: Create Draft Release
         id: create_release
         uses: actions/create-release@v1
@@ -41,7 +42,7 @@ jobs:
           draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
+
       - name: Upload PDF to GitHub Release
         uses: actions/upload-release-asset@v1
         with:
