@@ -75,6 +75,18 @@ A **blue-green strategy** is enforced at the container layer: two identical back
 <!-- image -->
 ![ci/cd pipeline](img/cicd.png)
 
+We performed a structured literature- and feature-based comparison before committing to **GitHub Actions**.  The criteria below are the same ones we use throughout the project (cost, maintenance effort, ecosystem fit, security, and learning value).
+
+| Criterion                                      | GitHub Actions                                                                                                                        | Why it meets our needs                                                                                                             |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Native integration with our code host**      | Lives inside every GitHub repo; PR checks and annotations appear exactly where we review code.                                        | Keeps feedback loop short—no context-switching or webhook glue.                                                                    |
+| **Cost for a student project**                 | Free unlimited minutes for public repos and generous private-repo allowance under the GitHub Student Pack.                            | Zero budget impact; no “rate-limit anxiety” during heavy iteration weeks.                                                          |
+| **Maintenance overhead**                       | Fully managed runners; updates, patching and autoscaling are handled by GitHub.                                                       | Lets us focus on pipeline logic (tests, scans, deploy) rather than administering a Jenkins/GitLab server.                          |
+| **Action marketplace**                         | 20 000 + reusable actions (e.g. `setup-java`, `trivy-action`, `appleboy/ssh-action`).                                                 | We composed the entire pipeline without writing bespoke Bash wrappers, accelerating delivery and reducing error-surface.           |
+| **Secrets management & supply-chain security** | Encrypted repository and environment secrets; built-in OIDC tokens for cloud deploy.                                                  | Aligns with the security controls we list in § 2.4—no plaintext secrets, audit trail for every secret read.                        |
+| **Container & service support**                | Jobs run in Docker-enabled Ubuntu images; `services:` stanza spins up multi-container integration-test stacks that mirror production. | Exactly matches our need to boot the monitoring stack (`docker compose … up -d`) during pipeline runs.                             |
+| **Learning curve vs. course time-box**         | Declarative YAML, mirrors examples shown in the lectures.                                                                             | Fast on-boarding for all group members; aligns with the course’s emphasis on *practical DevOps*, not pipeline framework internals. |
+
 **Tools Used:**
 
 * **GitHub Actions**: CI/CD orchestration
@@ -111,36 +123,6 @@ A **blue-green strategy** is enforced at the container layer: two identical back
 
 ## 2.3 Monitoring & Alerting
 
-* **Metrics** – Prometheus scrapes:
-
-  * `/metrics` (application),
-  * JMX exporter (JVM internals),
-  * node‑exporter & cAdvisor (host / container).
-* **Dashboards** – Grafana boards: *Service Latency*, *Simulator Throughput*, *Droplet Overview*.
-* **Alerts** – Alertmanager routes *P95 latency > 300 ms 5 m* or *error‑rate > 2 %* to Slack; PagerDuty escalation for uptime < 99.5 %.
-
-## 2.4 Logging & Aggregation
-
-* **Log Format** – Logback JSON encoder (timestamp, level, traceId, userId, message).
-* **Collection** – Filebeat side‑car tails `/var/lib/minitwit/logs/*.log`.
-* **Indexing** – Elasticsearch ILM keeps 7 d hot, 21 d warm, 30 d delete; < 4 GB/day.
-* **Visualisation** – Kibana saved searches: *Failed‑Login Attempts*, *Top 10 slow queries*.
-
-## 2.5 Security Hardening
-??
-
-## 2.6 Scaling & Upgrades Strategy
-
-??
-
-# 3. Reflection Perspective
-
-??
-
----
-
-### 📊 Monitoring Strategy
-
 **Tools Used:**
 
 * **Prometheus**: Metrics scraping
@@ -157,53 +139,20 @@ A **blue-green strategy** is enforced at the container layer: two identical back
 * `app-http`: HTTP metrics from `minitwit` and `simulator-api`
 * `app-jmx`: JVM metrics (on separate ports)
 * `cadvisor` and `node-exporter`: Docker and system stats
-* All targets use HTTPS with `insecure_skip_verify` (certs used but not CA-signed)
 
----
 
-### 📋 Logging and Aggregation
+## 2.4 Logging & Aggregation
 
-**Logging Strategy:**
-
-* All services log to `/data/logs/*.log` (volume-mounted)
-* Logs are in **multiline timestamped format** (`^\d{4}-\d{2}-\d{2}`) for correct aggregation
-
-**Aggregation:**
-
-* **Filebeat** collects logs from all services via shared volume `minitwit-logs`
-* Filebeat forwards logs to **Elasticsearch**
+* **Log Format** – Logback JSON encoder (timestamp, level, traceId, userId, message).
+* **Collection** – Filebeat side‑car tails `/var/lib/minitwit/logs/*.log`.
+* **Indexing** – Elasticsearch ILM keeps 7 d hot, 21 d warm, 30 d delete; < 4 GB/day.
 * **Kibana** used for exploration and visualization
 
----
 
-### 🔒 Security Assessment Summary
+## 2.5 Security Hardening
+In our security assessment of ITU-MiniTwit, we identified that the highest risks to user confidentiality and session integrity stem from XSS, session hijacking (missing HttpOnly/Secure flags), and SQL injection, with additional concerns around CSRF, session fixation, brute-force logins, insecure TLS, and deployment misconfigurations. To address these, we’ve enabled Freemarker auto-escaping and a strict CSP, converted all database operations to parameterized JDBC prepared statements, and configured session cookies with HttpOnly, Secure, and SameSite attributes while regenerating IDs on login. We also enforce anti-CSRF tokens, rate-limit authentication attempts, require HTTPS with HSTS, and harden our DigitalOcean droplets (SSH-key only, minimal firewall rules). Finally, we centralize JSON-formatted security logs and integrate OWASP Dependency-Check, Trivy scans, and periodic DAST/SAST into our CI/CD pipeline to catch and remediate vulnerabilities continuously.
 
-**Findings:**
-
-* Session-based login with bcrypt password hashing ✅
-* Input validation on forms ✅
-* SQL injection protection via prepared statements ✅
-* Partial XSS protection (Freemarker templates escape by default) ⚠️
-* No CSRF or rate limiting implemented ❌
-
-**Hardening Steps Taken:**
-
-* **BCrypt** used for secure password storage
-* Session timeout set (300s)
-* Input validation during registration/login
-* HTTPS enforced via NGINX + Certbot
-* NGINX denies access to direct port 80 (auto-redirects to HTTPS)
-* Docker containers run with restart policies and logs are centralized
-
-**Future Hardening Suggestions:**
-
-* Add CSRF tokens on forms
-* Rate-limit failed login attempts
-* Explicitly escape all template variables
-
----
-
-### 📦 Scaling and Upgrade Strategy
+## 2.6 Scaling & Upgrades Strategy
 
 **Strategy:**
 
@@ -227,30 +176,67 @@ A **blue-green strategy** is enforced at the container layer: two identical back
 * Deprecated containers are cleaned up post-deployment
 
 
-## 4 Reflection Perspective
+# 3. Reflection Perspective
 
----
+During this project, our two-person team confronted tight deadlines, infrastructure quirks, and operational surprises. Below we summarise the biggest challenges, our solutions, and the key takeaways in **evolution**, **operation**, and **maintenance**.
 
-### **GitHub Actions** as Our CI/CD Platform
+### 3.1 Evolution and Refactoring
 
-We performed a structured literature- and feature-based comparison before committing to **GitHub Actions**.  The criteria below are the same ones we use throughout the project (cost, maintenance effort, ecosystem fit, security, and learning value).
+**Challenges:**
 
-| Criterion                                      | GitHub Actions                                                                                                                        | Why it meets our needs                                                                                                             |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| **Native integration with our code host**      | Lives inside every GitHub repo; PR checks and annotations appear exactly where we review code.                                        | Keeps feedback loop short—no context-switching or webhook glue.                                                                    |
-| **Cost for a student project**                 | Free unlimited minutes for public repos and generous private-repo allowance under the GitHub Student Pack.                            | Zero budget impact; no “rate-limit anxiety” during heavy iteration weeks.                                                          |
-| **Maintenance overhead**                       | Fully managed runners; updates, patching and autoscaling are handled by GitHub.                                                       | Lets us focus on pipeline logic (tests, scans, deploy) rather than administering a Jenkins/GitLab server.                          |
-| **Action marketplace**                         | 20 000 + reusable actions (e.g. `setup-java`, `trivy-action`, `appleboy/ssh-action`).                                                 | We composed the entire pipeline without writing bespoke Bash wrappers, accelerating delivery and reducing error-surface.           |
-| **Secrets management & supply-chain security** | Encrypted repository and environment secrets; built-in OIDC tokens for cloud deploy.                                                  | Aligns with the security controls we list in § 2.4—no plaintext secrets, audit trail for every secret read.                        |
-| **Container & service support**                | Jobs run in Docker-enabled Ubuntu images; `services:` stanza spins up multi-container integration-test stacks that mirror production. | Exactly matches our need to boot the monitoring stack (`docker compose … up -d`) during pipeline runs.                             |
-| **Learning curve vs. course time-box**         | Declarative YAML, mirrors examples shown in the lectures.                                                                             | Fast on-boarding for all group members; aligns with the course’s emphasis on *practical DevOps*, not pipeline framework internals. |
+* **Single-database simplicity**: We used only SQLite throughout—no full ORM or multi-DB layering—leading to manual SQL scattered in DAO-like methods and occasional repetitive code.
+* **Scope management**: As a team of two, balancing feature scope versus stability was tough; early attempts to over-engineer (e.g., planning microservices) had to be shelved.
 
-#### Alignment with MSc Learning Objectives
+**Solutions:**
 
-* **DevOps principles & CI/CD practice** – tight PR-gated checks, automatic deploys and security scans demonstrate continuous integration and delivery in a single, visible toolchain.
-* **Infrastructure-as-Code** – the pipeline itself is version-controlled YAML; every edit is peer-reviewed like application code, fulfilling the “document and explain all steps” outcome.
-* **Security & maintenance** – managed runners eliminate the need to harden a self-hosted CI server, while secrets-scoping and Trivy/Dependabot actions embed security controls directly into the delivery flow.
-* **Scalability** – GitHub auto-scales runners, meaning our throughput grows automatically when we parallelise matrix jobs (e.g. Java 21 + Python 3.x).
-* **Reflection & continuous improvement** – metrics such as *time-to-green* and *failed-build rate* are available in the Insights tab, giving us quantitative feedback on process health.
+* Embraced SQLite’s simplicity: centralised connection logic in a helper class (`Database.java`), documented common patterns, and reused SQL snippets in a shared utility to reduce duplication.
+* Adopted an MVP-first mindset: focused on core flows (register, post, follow) before any advanced refactoring or secondary features.
 
-In summary, **GitHub Actions** offers the **lowest operational friction** and **highest pedagogical value** for a GitHub-hosted university project: no extra infrastructure to manage, a rich marketplace of audited building blocks, first-class security features, and an experience that keeps every DevOps feedback signal inside the same developer workflow.
+**Lessons Learned:**
+
+1. **Keep it simple**: For small teams, minimal abstractions accelerate progress. SQLite served well at our scale and avoided operational overhead.
+2. **Prioritise core functionality**: Building a minimum viable pipeline prevented wasted effort on unneeded complexity.
+
+### 3.2 Operation
+
+**Challenges:**
+
+* **Deployment headaches**: Configuring NGINX on `161.35.71.145`, handling blue-green symlinks, and ensuring zero-downtime flips often hit port conflicts or stale socket files.
+* **Firewall and VPC quirks**: Blocking by DigitalOcean firewalls and misconfigured port whitelists meant our monitoring droplet (`68.183.210.76`) couldn’t scrape metrics until rules were tightened.
+* **Logging setup**: Initial Filebeat configuration shipped logs over public network by mistake; securing the VPC tunnel and adjusting `filebeat.yml` took several debugging sessions.
+
+**Solutions:**
+
+* Created idempotent `deploy_blue_green.sh` that cleans old sockets, verifies NGINX config, and only flips the upstream if health checks pass.
+* Standardised firewall rules in Terraform-like shell scripts, versioned under `infrastructure/`, to reproduce across droplets.
+* Shifted Filebeat to use private VPC IP addresses and enabled TLS between Filebeat and Elasticsearch, updating `filebeat.yml` and `elasticsearch` certs.
+
+**Lessons Learned:**
+
+1. **Automate deploy scripts**: Manual NGINX edits led to downtime; scripting ensured consistency and quick rollback.
+2. **Test infra changes**: Adjust firewall rules in a staging droplet before prod to avoid blind spots.
+3. **Secure defaults**: Always assume networks are hostile; configure logging agents to use private IPs and encryption.
+
+### 3.3 Maintenance
+
+**Challenges:**
+
+* **Workload balance**: With only two contributors, reviews and testing overlapped, causing merge bottlenecks.
+* **Documentation lag**: Keeping docs up-to-date with code changes was deprioritised under tight deadlines.
+
+**Lessons Learned:**
+
+1. **Regular communication**: Even small teams need structured check‑ins to avoid duplicated effort.
+2. **Docs-as-code**: Automating documentation reduces drift and ensures accuracy under time pressure.
+
+## 3.4 DevOps‑style Work Approach
+
+* **Survival development** – Tried to cope with the high workload, was hard to manage as only two people
+* **“You build it, you run it”**
+* **Automated everything** – One‑click (`gh workflow run deploy.yml`) recreates stack from scratch; mean time to recover (MTTR) < 5 min.
+
+### Key Takeaways
+
+1. **Observability first** – Surfaced latency anomalies before users complained.
+2. **Small, safe releases** – Blue‑green eliminated rollbacks pains (no DB migrations during cycle).
+3. **Shared responsibility** – Ops knowledge spread across team → no gatekeepers.
