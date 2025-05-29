@@ -23,8 +23,7 @@ COPY --from=build /app/target/minitwit-java-app.jar app.jar
 
 # Default command: start the application with JMX agent
 ENTRYPOINT [
-  "java",
-  "-javaagent:/app/jmx_prometheus_javaagent-0.18.0.jar=9404:/app/jmx_config.yml",
-  "-jar",
-  "app.jar"
+    'java',
+    '-javaagent:/app/jmx_prometheus_javaagent-0.18.0.jar=9404:/app/jmx_config.yml',
+    '-jar app.jar'
 ]
