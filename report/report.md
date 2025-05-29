@@ -56,12 +56,10 @@ A **blue-green strategy** is enforced at the container layer: two identical back
 ![simulator request](img/simu.png)
 
 ## 1.4 Current System State & Quality Metrics
-In our CI/CD pipeline’s test-java stage we now invoke three automated static‐analysis checks immediately after compiling and running any unit tests:
+In our CI/CD pipeline’s test-java stage we now invoke one automated static‐analysis checks immediately after compiling and running any unit tests:
 
-SpotBugs (mvn spotbugs:check) to catch common bug patterns and enforce a zero-high-severity-defect policy,
 Checkstyle (mvn checkstyle:check) to validate code style against our project rules,
-OWASP Dependency-Check (mvn org.owasp:dependency-check-maven:check) to flag any known library CVEs before they creep into production.
-By wiring each plugin into the POM (binding SpotBugs to the verify phase and configuring Checkstyle’s rule set), any new rule violations or emerging vulnerabilities automatically fail the build—ensuring that only clean, secure code ever reaches deployment.
+By wiring each plugin into the POM (configuring Checkstyle’s rule set), any new rule violations or emerging vulnerabilities automatically fail the build—ensuring that only clean code, ever reaches deployment.
 
 ## 1.5 Rationale for Technology Choices (MSc)
 
