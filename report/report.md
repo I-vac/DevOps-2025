@@ -240,3 +240,6 @@ During this project, our two-person team confronted tight deadlines, infrastruct
 1. **Observability first** – Surfaced latency anomalies before users complained.
 2. **Small, safe releases** – Blue‑green eliminated rollbacks pains (no DB migrations during cycle).
 3. **Shared responsibility** – Ops knowledge spread across team → no gatekeepers.
+
+# Appendix A
+![c4-container](img/c4-container.png)
