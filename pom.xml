@@ -90,6 +90,19 @@
 
     <build>
     <plugins>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>spotbugs-maven-plugin</artifactId>
+            <version>4.7.3.0</version>
+            <executions>
+                <execution>
+                <phase>verify</phase>
+                <goals>
+                    <goal>check</goal>
+                </goals>
+                </execution>
+            </executions>
+        </plugin>
         <!-- 2️⃣ Checkstyle for Java linting -->
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
