@@ -1,26 +1,30 @@
-# Build
+# Build stage
 FROM jelastic/maven:3.9.5-openjdk-21 AS build
 WORKDIR /app
-COPY pom.xml .
+COPY pom.xml ./
 COPY src ./src
 RUN mvn clean package
 
-# Runtime
+# Runtime stage
 FROM eclipse-temurin:21-jdk
 WORKDIR /app
 
+# Expose application ports
+EXPOSE 5000
+EXPOSE 9404  # JMX exporter port
+EXPOSE 9091  # Prometheus metrics port (if used by the app)
+
 # JMX exporter
-# copy the JMX exporter and config so the script can pick them up
 COPY monitoring/jmx_prometheus_javaagent-0.18.0.jar /app/jmx_prometheus_javaagent-0.18.0.jar
 COPY monitoring/jmx_config.yml            /app/jmx_config.yml
-EXPOSE 9404
 
-# App
+# Application JAR
 COPY --from=build /app/target/minitwit-java-app.jar app.jar
-COPY src/main/resources/schema.sql /app/schema.sql
-COPY db_init.sh                   /app/db_init.sh
-RUN chmod +x /app/db_init.sh
 
-# Ports
-EXPOSE 5000
-CMD ["/app/db_init.sh"]
+# Default command: start the application with JMX agent
+ENTRYPOINT [
+  "java",
+  "-javaagent:/app/jmx_prometheus_javaagent-0.18.0.jar=9404:/app/jmx_config.yml",
+  "-jar",
+  "app.jar"
+]

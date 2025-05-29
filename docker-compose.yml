@@ -134,5 +134,5 @@ volumes:
   #   external: true
   #   name: minitwit_minitwit-data
   minitwit-logs:
-    # external: true
+    external: true
     name: minitwit_minitwit-logs
