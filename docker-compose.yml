@@ -1,12 +1,34 @@
+name: minitwit
+
 services:
-  minitwit:
+  # BLUE VERSION
+  minitwit-blue:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: minitwit-blue
     ports:
-      - "5000:5000"
+      - "5004:5000"  # exposed for NGINX
       - "9404:9404"
-      - "9091:9091"     # expose HTTP metrics
+      - "9094:9091"
+    volumes:
+      - minitwit-data:/data
+      - minitwit-logs:/data/logs
+    environment:
+      - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+      - METRICS_PORT=9091
+    restart: always
+
+  # GREEN VERSION
+  minitwit-green:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: minitwit-green
+    ports:
+      - "5005:5000"
+      - "9406:9404"
+      - "9095:9091"
     volumes:
       - minitwit-data:/data
       - minitwit-logs:/data/logs
@@ -61,16 +83,14 @@ services:
         target: /usr/share/filebeat/filebeat.yml
         read_only: true
       - minitwit-logs:/data/logs:ro
-    depends_on:
-      - minitwit
     networks:
       - default
 
 volumes:
-  # bind to your existing volume named "minitwit_minitwit-data"
   minitwit-data:
-    external:
-      name: minitwit_minitwit-data
-    # name: minitwit_minitwit-data
+    external: true
+    name: minitwit_minitwit-data
   minitwit-logs:
-    driver: local
+    external: true
+    name: minitwit_minitwit-logs
+    

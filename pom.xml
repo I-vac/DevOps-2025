@@ -90,6 +90,18 @@
 
     <build>
     <plugins>
+        <!-- OWASP Dep-Check -->
+        <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+        <version>8.4.0</version>
+        <executions>
+            <execution>
+            <goals><goal>check</goal></goals>
+            <phase>verify</phase>
+            </execution>
+        </executions>
+        </plugin>
         <!-- 2️⃣ Checkstyle for Java linting -->
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
