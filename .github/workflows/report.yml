@@ -1,5 +1,8 @@
 name: Build Report
 
+permissions:
+  contents: write
+
 on:
   push:
     branches: [ report ]
