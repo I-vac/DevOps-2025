@@ -1,6 +1,8 @@
 # ITU‑MiniTwit – DevOps Monitoring & CI/CD Report
 
-*MSc Group N* — Spring 2025 ⁄ jnol@itu.dk & ivni@itu.dk
+*MSc Group N* — Spring 2025 
+Jesse Noah Lang - jnol@itu.dk
+Ivaylo Valeri Nikolov - ivni@itu.dk
 
 ---
 # 1. System’s Perspective
@@ -54,8 +56,12 @@ A **blue-green strategy** is enforced at the container layer: two identical back
 ![simulator request](img/simu.png)
 
 ## 1.4 Current System State & Quality Metrics
-??
+In our CI/CD pipeline’s test-java stage we now invoke three automated static‐analysis checks immediately after compiling and running any unit tests:
 
+SpotBugs (mvn spotbugs:check) to catch common bug patterns and enforce a zero-high-severity-defect policy,
+Checkstyle (mvn checkstyle:check) to validate code style against our project rules,
+OWASP Dependency-Check (mvn org.owasp:dependency-check-maven:check) to flag any known library CVEs before they creep into production.
+By wiring each plugin into the POM (binding SpotBugs to the verify phase and configuring Checkstyle’s rule set), any new rule violations or emerging vulnerabilities automatically fail the build—ensuring that only clean, secure code ever reaches deployment.
 
 ## 1.5 Rationale for Technology Choices (MSc)
 
@@ -175,6 +181,9 @@ In our security assessment of ITU-MiniTwit, we identified that the highest risks
 * Health checks (`/health`) used to verify readiness before switching traffic
 * Deprecated containers are cleaned up post-deployment
 
+### AI use
+in this project AI was used as a helper, and advicer. Co-pilot is connected to VS code and made some code suggestions.
+GPT was unable to provide solutions that were 100% correct. More likely around 30%. Therefore you need to be careful of what to use and how you use it.
 
 # 3. Reflection Perspective
 
