@@ -5,7 +5,7 @@ permissions:
 
 on:
   push:
-    branches: [ report ]
+    branches: [ main ]
 
 jobs:
   build-docs:
@@ -15,15 +15,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          persist-credentials: true  # so we can push back
-          fetch-depth: 0             # fetch full history
+          persist-credentials: true  # allow pushes
+          fetch-depth: 0             # get full history
 
-      - name: Install Pandoc, XeLaTeX
+      - name: Install Pandoc & XeLaTeX
         run: |
           sudo apt-get update
           sudo apt-get install -y pandoc texlive-xetex
 
-      - name: Build report PDF with Pandoc
+      - name: Build report PDF
         run: |
           pandoc report/report.md \
             --from=gfm+yaml_metadata_block+pipe_tables \
@@ -37,14 +37,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add report/ITU-MiniTwit-Report.pdf
-          git diff --quiet --staged || git commit -m "chore: update ITU-MiniTwit-Report.pdf [skip ci]"
+          # only commit if the PDF actually changed
+          git diff --cached --exit-code || git commit -m "chore: update ITU-MiniTwit-Report.pdf [skip ci]"
           git push
-
-      # (Optional) create a draft release for distribution
-      - name: Create Draft Release & upload PDF
-        if: github.ref == 'refs/heads/report'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: report/ITU-MiniTwit-Report.pdf
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
