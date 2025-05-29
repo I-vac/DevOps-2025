@@ -2,23 +2,25 @@ name: minitwit
 
 services:
   mysql:
-    build:
-      context: .
-      dockerfile: Dockerfile.db
-      args:
-        - MYSQL_DATABASE=${MYSQL_DATABASE}
-        - MYSQL_ALLOW_EMPTY_PASSWORD=${MYSQL_ALLOW_EMPTY_PASSWORD}
+    image: mysql:8.0
+    container_name: minitwit-mysql
     environment:
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_ALLOW_EMPTY_PASSWORD=${MYSQL_ALLOW_EMPTY_PASSWORD}
+      MYSQL_ROOT_PASSWORD: rootpassword        # change to something secure!
+      MYSQL_DATABASE: minitwit_db               # must match the JDBC URL below
+      MYSQL_USER: minitwit
+      MYSQL_PASSWORD: minitwitpass
     ports:
       - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p$MYSQL_ROOT_PASSWORD"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
-    restart: always
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   # BLUE VERSION
   minitwit-blue:
     build:
@@ -36,6 +38,9 @@ services:
       # - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
       - DATABASE_URL=jdbc:mysql://mysql:3306/minitwit_db?user=root
       - METRICS_PORT=9091
+      - DATABASE_URL=jdbc:mysql://mysql:3306/minitwit_db?serverTimezone=UTC
+      - DB_USER=minitwit
+      - DB_PASS=minitwitpass
     depends_on:
       mysql:
         condition: service_healthy
@@ -52,12 +57,15 @@ services:
       - "9406:9404"
       - "9095:9091"
     volumes:
-      - minitwit-data:/data
+      # - minitwit-data:/data
       - minitwit-logs:/data/logs
     environment:
       # - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
       - DATABASE_URL=jdbc:mysql://mysql:3306/minitwit_db?user=root
       - METRICS_PORT=9091
+      - DATABASE_URL=jdbc:mysql://mysql:3306/minitwit_db?serverTimezone=UTC
+      - DB_USER=minitwit
+      - DB_PASS=minitwitpass    
     depends_on:
       mysql:
         condition: service_healthy
@@ -72,12 +80,15 @@ services:
       - "9405:9404"     # host 9405 → container 9404
       - "9092:9091"    # HTTP /metrics (host 9092 → container 9091)
     volumes:
-      - minitwit-data:/data
+      # - minitwit-data:/data
       - minitwit-logs:/data/logs
     environment:
       # - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
       - DATABASE_URL=jdbc:mysql://mysql:3306/minitwit_db?user=root
       - "9092:9091"    # HTTP /metrics (host 9092 → container 9091)
+      - DATABASE_URL=jdbc:mysql://mysql:3306/minitwit_db?serverTimezone=UTC
+      - DB_USER=minitwit
+      - DB_PASS=minitwitpas
     depends_on:
       mysql:
         condition: service_healthy
@@ -117,9 +128,10 @@ services:
       - default
 
 volumes:
-  minitwit-data:
-    external: true
-    name: minitwit_minitwit-data
+  mysql-data:
+  # minitwit-data:
+  #   external: true
+  #   name: minitwit_minitwit-data
   minitwit-logs:
-    external: true
+    # external: true
     name: minitwit_minitwit-logs

@@ -14,7 +14,6 @@ import io.prometheus.client.exporter.HTTPServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class App {
     private static final Logger log = LoggerFactory.getLogger(App.class);
 
@@ -32,11 +31,9 @@ public class App {
         .labelNames("method","endpoint","status")
         .register();
 
-    // 3️⃣ DB query latency summary (DB instrumentation in Database class)
-
     public static void main(String[] args) throws Exception {
         // Configure SparkJava
-        log.info("Starting Minitwit on port 5000");
+        log.info("🔧 Starting MiniTwit on port 5000");
         port(5000);
         staticFiles.location("/public");
         staticFiles.expireTime(600L);
@@ -45,7 +42,7 @@ public class App {
         String mp = System.getenv("METRICS_PORT");
         int metricsPort = mp != null ? Integer.parseInt(mp) : 9091;
         new HTTPServer(metricsPort);
-        log.info("Prometheus HTTP server running on port {}", metricsPort);
+        log.info("📈 Prometheus HTTP server running on port {}", metricsPort);
 
         // before-after filters for HTTP timing
         before((req, res) -> {
@@ -56,14 +53,16 @@ public class App {
             long start = (Long) req.attribute("startTime");
             double secs = (System.nanoTime() - start) / 1e9;
             log.info("← {} {} - status={} in {}ms",
-                        req.requestMethod(), req.pathInfo(), res.status(), (int)(secs*1000));
-            httpLatency.labels(req.requestMethod(), req.pathInfo(), 
-                                String.valueOf(res.status())).observe(secs);
+                     req.requestMethod(), req.pathInfo(), res.status(), (int)(secs * 1000));
+            httpLatency.labels(
+                req.requestMethod(), 
+                req.pathInfo(), 
+                String.valueOf(res.status())
+            ).observe(secs);
         });
 
-
-        // Database setup
-        Database.init();
+        // Database connection is initialized in Database.static block
+        // (No explicit Database.init() call needed.)
 
         // Configure Freemarker
         TemplateRenderer.configure();
@@ -71,19 +70,18 @@ public class App {
         // Session setup
         before((req, res) -> req.session().maxInactiveInterval(300));
 
-        // Routes
+        // ————————————— Routes —————————————
         get("/", (req, res) -> {
-            if (req.session().attribute("user_id") == null) {
+            Integer uid = req.session().attribute("user_id");
+            if (uid == null) {
                 res.redirect("/public");
                 return null;
             }
             Map<String, Object> model = createModel(req);
-            int userId = req.session().attribute("user_id");
-            model.put("messages", Database.getTimelineMessages(userId, PER_PAGE));
+            model.put("messages", Database.getTimelineMessages(uid, PER_PAGE));
             return TemplateRenderer.render("timeline", model);
         });
 
-        // Health check
         get("/health", (req, res) -> {
             res.type("application/json");
             return new Gson().toJson(Map.of("status", "ok"));
@@ -96,8 +94,7 @@ public class App {
         });
 
         get("/login", (req, res) -> {
-            Map<String, Object> model = createModel(req);
-            return TemplateRenderer.render("login", model);
+            return TemplateRenderer.render("login", createModel(req));
         });
 
         get("/latest", (req, res) -> {
@@ -109,47 +106,48 @@ public class App {
         post("/login", (req, res) -> {
             String username = req.queryParams("username");
             String password = req.queryParams("password");
-            Map<String, Object> user = Database.getUserByUsername(username);
-            if (user != null && BCrypt.checkpw(password, (String) user.get("pw_hash"))) {
-                req.session().attribute("user_id", user.get("user_id"));
+            Map<String,Object> user = Database.getUserByUsername(username);
+            if (user != null && BCrypt.checkpw(password, (String)user.get("pw_hash"))) {
+                // pull the actual numeric user_id and store it
+                Integer uid = ((Number)user.get("user_id")).intValue();
+                req.session().attribute("user_id", uid);
                 addFlash(req, "You were logged in");
                 res.redirect("/");
                 return null;
             }
-            Map<String, Object> model = createModel(req);
+            Map<String,Object> model = createModel(req);
             model.put("error", "Invalid username/password");
             model.put("username", username);
             return TemplateRenderer.render("login", model);
         });
 
         get("/register", (req, res) -> {
-            Map<String, Object> model = createModel(req);
-            return TemplateRenderer.render("register", model);
+            return TemplateRenderer.render("register", createModel(req));
         });
 
         post("/register", (req, res) -> {
-            Map<String, Object> model = createModel(req);
-            String username = req.queryParams("username");
-            String email = req.queryParams("email");
-            String password = req.queryParams("password");
-            String password2 = req.queryParams("password2");
-            if (username == null || username.isEmpty()) {
+            Map<String,Object> model = createModel(req);
+            String u = req.queryParams("username");
+            String e = req.queryParams("email");
+            String p = req.queryParams("password");
+            String p2 = req.queryParams("password2");
+            if (u == null || u.isBlank()) {
                 model.put("error", "You have to enter a username");
-            } else if (email == null || !email.contains("@")) {
+            } else if (e == null || !e.contains("@")) {
                 model.put("error", "You have to enter a valid email address");
-            } else if (password == null || password.isEmpty()) {
+            } else if (p == null || p.isBlank()) {
                 model.put("error", "You have to enter a password");
-            } else if (!password.equals(password2)) {
+            } else if (!p.equals(p2)) {
                 model.put("error", "The two passwords do not match");
-            } else if (Database.getUserByUsername(username) != null) {
+            } else if (Database.getUserByUsername(u) != null) {
                 model.put("error", "The username is already taken");
             }
             if (model.containsKey("error")) {
-                model.put("username", username);
-                model.put("email", email);
+                model.put("username", u);
+                model.put("email", e);
                 return TemplateRenderer.render("register", model);
             }
-            Database.createUser(username, email, BCrypt.hashpw(password, BCrypt.gensalt()));
+            Database.createUser(u, e, BCrypt.hashpw(p, BCrypt.gensalt()));
             addFlash(req, "You were successfully registered and can login now");
             res.redirect("/login");
             return null;
@@ -163,92 +161,92 @@ public class App {
         });
 
         get("/:username", (req, res) -> {
-            Map<String, Object> model = createModel(req);
-            String username = req.params(":username");
-            Map<String, Object> profile = Database.getUserByUsername(username);
+            String profileUser = req.params(":username");
+            Map<String,Object> profile = Database.getUserByUsername(profileUser);
             if (profile == null) halt(404, "User not found");
-            boolean followed = false;
             Integer current = req.session().attribute("user_id");
-            if (current != null) {
-                followed = Database.isFollowing(current, (Integer) profile.get("user_id"));
-            }
+            boolean followed = current != null 
+                && Database.isFollowing(current, (Integer)profile.get("id"));
+            Map<String,Object> model = createModel(req);
             model.put("profile_user", profile);
             model.put("followed", followed);
-            model.put("messages", Database.getUserTimeline((Integer) profile.get("user_id"), PER_PAGE));
+            model.put("messages", Database.getUserTimeline((Integer)profile.get("id"), PER_PAGE));
             return TemplateRenderer.render("timeline", model);
         });
 
         get("/:username/follow", (req, res) -> {
             Integer current = checkAuthenticated(req);
-            String username = req.params(":username");
-            Map<String, Object> profile = Database.getUserByUsername(username);
+            String userToFollow = req.params(":username");
+            Map<String,Object> profile = Database.getUserByUsername(userToFollow);
             if (profile == null) halt(404, "User not found");
-            Database.followUser(current, (Integer) profile.get("user_id"));
-            addFlash(req, "You are now following " + username);
-            res.redirect("/" + username);
+            Database.followUser(current, (Integer)profile.get("id"));
+            addFlash(req, "You are now following " + userToFollow);
+            res.redirect("/" + userToFollow);
             return null;
         });
 
         get("/:username/unfollow", (req, res) -> {
             Integer current = checkAuthenticated(req);
-            String username = req.params(":username");
-            Map<String, Object> profile = Database.getUserByUsername(username);
+            String userToUnfollow = req.params(":username");
+            Map<String,Object> profile = Database.getUserByUsername(userToUnfollow);
             if (profile == null) halt(404, "User not found");
-            Database.unfollowUser(current, (Integer) profile.get("user_id"));
-            addFlash(req, "You are no longer following " + username);
-            res.redirect("/" + username);
+            Database.unfollowUser(current, (Integer)profile.get("id"));
+            addFlash(req, "You are no longer following " + userToUnfollow);
+            res.redirect("/" + userToUnfollow);
             return null;
         });
 
         post("/add_message", (req, res) -> {
             Integer user = checkAuthenticated(req);
             String text = req.queryParams("text");
-            if (text != null && !text.trim().isEmpty()) {
-                Database.createMessage(user, text.trim(), System.currentTimeMillis()/1000);
+            if (text != null && !text.isBlank()) {
+                Database.createMessage(user, text.trim(), System.currentTimeMillis() / 1000);
                 addFlash(req, "Your message was recorded");
             }
             res.redirect("/");
             return null;
         });
 
+        // Global exception handler
         exception(Exception.class, (e, req, res) -> {
             log.error("Unhandled exception on {} {}", req.requestMethod(), req.pathInfo(), e);
             res.status(500);
             res.body("Internal Server Error: " + e.getMessage());
         });
+
+        init(); // Start Spark
     }
 
-    private static Map<String, Object> createModel(Request req) {
-        Map<String, Object> model = new HashMap<>();
-        Integer userId = req.session().attribute("user_id");
-        
-        if (userId != null) {
-            model.put("user", Database.getUserById(userId));
+    private static Map<String,Object> createModel(Request req) {
+        Map<String,Object> model = new HashMap<>();
+        Integer uid = req.session().attribute("user_id");
+        if (uid != null) {
+            model.put("user", Database.getUserById(uid));
         }
-        
+        @SuppressWarnings("unchecked")
         List<String> flashes = req.session().attribute("flashes");
         if (flashes != null && !flashes.isEmpty()) {
             model.put("flashes", new ArrayList<>(flashes));
             req.session().removeAttribute("flashes");
         }
-        
         return model;
     }
 
-    private static void addFlash(Request req, String message) {
-        List<String> flashes = req.session().attribute("flashes");
-        if (flashes == null) {
-            flashes = new ArrayList<>();
+    private static void addFlash(Request req, String msg) {
+        @SuppressWarnings("unchecked")
+        List<String> f = req.session().attribute("flashes");
+        if (f == null) {
+            f = new ArrayList<>();
         }
-        flashes.add(message);
-        req.session().attribute("flashes", flashes);
+        f.add(msg);
+        req.session().attribute("flashes", f);
     }
 
     private static Integer checkAuthenticated(Request req) {
-        Integer userId = req.session().attribute("user_id");
-        if (userId == null) {
+        Integer uid = req.session().attribute("user_id");
+        if (uid == null) {
             halt(401, "Unauthorized");
         }
-        return userId;
+        return uid;
     }
 }

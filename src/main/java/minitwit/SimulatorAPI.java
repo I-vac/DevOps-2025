@@ -6,24 +6,62 @@ import spark.Request;
 import spark.Response;
 import java.util.*;
 import org.mindrot.jbcrypt.BCrypt;
+import io.prometheus.client.Summary;
+import io.prometheus.client.hotspot.DefaultExports;
+import io.prometheus.client.exporter.HTTPServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SimulatorAPI {
+    private static final Logger log = LoggerFactory.getLogger(SimulatorAPI.class);
     private static final int PER_PAGE = 30;
     private static final Gson gson = new Gson();
 
-    public static void main(String[] args) {
+    // JVM metrics (HotSpot)
+    static {
+        DefaultExports.initialize();
+    }
+
+    // HTTP request latency summary
+    private static final Summary httpLatency = Summary.build()
+        .name("sim_api_request_duration_seconds")
+        .help("Simulator API HTTP request latency in seconds")
+        .labelNames("method","endpoint","status")
+        .register();
+
+    public static void main(String[] args) throws Exception {
         // Configure SparkJava
+        log.info("🔧 Starting Simulator API on port 5001");
         port(5001);
         staticFiles.location("/public");
         staticFiles.expireTime(600L);
 
-        // Database setup
-        Database.init();
+        // Start Prometheus HTTP server on metrics port
+        String mp = System.getenv("METRICS_PORT");
+        int metricsPort = mp != null ? Integer.parseInt(mp) : 9091;
+        new HTTPServer(metricsPort);
+        log.info("📈 Prometheus HTTP server running on port {}", metricsPort);
 
-        // Configure Freemarker
-        TemplateRenderer.configure();
+        // before-after filters for HTTP timing
+        before((req, res) -> {
+            log.info("→ {} {}", req.requestMethod(), req.pathInfo());
+            req.attribute("startTime", System.nanoTime());
+        });
+        afterAfter((req, res) -> {
+            long start = (Long) req.attribute("startTime");
+            double secs = (System.nanoTime() - start) / 1e9;
+            log.info("← {} {} - status={} in {}ms",
+                     req.requestMethod(), req.pathInfo(), res.status(), (int)(secs * 1000));
+            httpLatency.labels(
+                req.requestMethod(),
+                req.pathInfo(),
+                String.valueOf(res.status())
+            ).observe(secs);
+        });
 
-        // Middleware for content-type and authorization
+        // Database connection is initialized in Database static block
+
+        // Middleware for JSON content-type and simple auth
         before((req, res) -> {
             res.type("application/json");
             String authHeader = req.headers("Authorization");
@@ -32,109 +70,16 @@ public class SimulatorAPI {
             }
         });
 
-        get("/", (req, res) -> {
-            if (req.session().attribute("user_id") == null) {
-                res.redirect("/public");
-                return null;
-            }
-            Map<String, Object> model = createModel(req);
-            int userId = (Integer) req.session().attribute("user_id");
-            model.put("messages", Database.getTimelineMessages(userId, PER_PAGE));
-            return TemplateRenderer.render("timeline", model);
-        });
+        // Health check endpoint
+        get("/health", (req, res) -> gson.toJson(Map.of("status", "ok")));
 
-        get("/public", (req, res) -> {
-            Map<String, Object> model = createModel(req);
-            model.put("messages", Database.getPublicTimeline(PER_PAGE));
-            return TemplateRenderer.render("timeline", model);
-        });
-
-                // Health check
-        get("/health", (req, res) -> {
-            res.type("application/json");
-            return gson.toJson(Map.of("status", "ok"));
-        });
-
-        // right with your other routes:
+        // Latest message ID
         get("/latest", (req, res) -> {
             int latest = Database.getLatestCommandId();
-            res.type("application/json");
-            // e.g. { "latest_id": 42 }
             return gson.toJson(Map.of("latest_id", latest));
         });
 
-
-        get("/login", (req, res) -> {
-            Map<String, Object> model = createModel(req);
-            return TemplateRenderer.render("login", model);
-        });
-
-        get("/register", (req, res) -> {
-            Map<String, Object> model = createModel(req);
-            return TemplateRenderer.render("register", model);
-        });
-
-        get("/logout", (req, res) -> {
-            addFlash(req, "You were logged out");
-            req.session().removeAttribute("user_id");
-            res.redirect("/public");
-            return null;
-        });
-
-        get("/:username", (req, res) -> {
-            Map<String, Object> model = createModel(req);
-            String username = req.params(":username");
-            Map<String, Object> profileUser = Database.getUserByUsername(username);
-
-            if (profileUser == null) {
-                halt(404, "User not found");
-            }
-
-            boolean followed = false;
-            Integer currentUserId = req.session().attribute("user_id");
-            if (currentUserId != null) {
-                followed = Database.isFollowing(currentUserId, (Integer) profileUser.get("user_id"));
-            }
-
-            model.put("profile_user", profileUser);
-            model.put("followed", followed);
-            model.put("messages", Database.getUserTimeline(
-                (Integer) profileUser.get("user_id"), PER_PAGE));
-            
-            return TemplateRenderer.render("timeline", model);
-        });
-
-        get("/:username/follow", (req, res) -> {
-            Integer currentUserId = checkAuthenticated(req);
-            String username = req.params(":username");
-            Map<String, Object> profileUser = Database.getUserByUsername(username);
-
-            if (profileUser == null) {
-                halt(404, "User not found");
-            }
-
-            Database.followUser(currentUserId, (Integer) profileUser.get("user_id"));
-            addFlash(req, "You are now following " + username);
-            res.redirect("/" + username);
-            return null;
-        });
-
-        get("/:username/unfollow", (req, res) -> {
-            Integer currentUserId = checkAuthenticated(req);
-            String username = req.params(":username");
-            Map<String, Object> profileUser = Database.getUserByUsername(username);
-
-            if (profileUser == null) {
-                halt(404, "User not found");
-            }
-
-            Database.unfollowUser(currentUserId, (Integer) profileUser.get("user_id"));
-            addFlash(req, "You are no longer following " + username);
-            res.redirect("/" + username);
-            return null;
-        });
-
-        // Register endpoint
+        // Register user
         post("/register", (req, res) -> {
             Map<String, Object> payload = gson.fromJson(req.body(), Map.class);
             String username = (String) payload.get("username");
@@ -156,7 +101,7 @@ public class SimulatorAPI {
             return "";
         });
 
-        // Post tweet endpoint
+        // Post message
         post("/msgs/:username", (req, res) -> {
             String username = req.params(":username");
             Map<String, Object> payload = gson.fromJson(req.body(), Map.class);
@@ -173,86 +118,59 @@ public class SimulatorAPI {
                 return gson.toJson(Map.of("error", "User not found"));
             }
 
-            // Ensure the user exists in the database before allowing to tweet
-            Integer userId = (Integer) user.get("user_id");
-            if (userId == null) {
-                res.status(404);
-                return gson.toJson(Map.of("error", "User ID not found"));
-            }
-
+            Integer userId = (Integer) user.get("id");
             Database.createMessage(userId, content, System.currentTimeMillis() / 1000);
             res.status(204);
             return "";
         });
 
-        // Follow endpoint
+        // Follow user
         post("/fllws/:username", (req, res) -> {
             String username = req.params(":username");
             Map<String, Object> payload = gson.fromJson(req.body(), Map.class);
-            String followUser = (String) payload.get("follow");
+            String toFollow = (String) payload.get("follow");
 
-            if (followUser == null) {
+            if (toFollow == null) {
                 res.status(400);
                 return gson.toJson(Map.of("error", "Follow username required"));
             }
 
             Map<String, Object> user = Database.getUserByUsername(username);
-            Map<String, Object> userToFollow = Database.getUserByUsername(followUser);
-
-            if (user == null || userToFollow == null) {
+            Map<String, Object> target = Database.getUserByUsername(toFollow);
+            if (user == null || target == null) {
                 res.status(404);
                 return gson.toJson(Map.of("error", "User not found"));
             }
 
-            Integer userId = (Integer) user.get("user_id");
-            Integer followUserId = (Integer) userToFollow.get("user_id");
-
-            if (userId == null || followUserId == null) {
-                res.status(404);
-                return gson.toJson(Map.of("error", "User ID not found"));
-            }
-
-            Database.followUser(userId, followUserId);
+            Database.followUser((Integer) user.get("id"), (Integer) target.get("id"));
             res.status(204);
             return "";
         });
 
-        // Unfollow endpoint
+        // Unfollow user
         post("/fllws/:username/unfollow", (req, res) -> {
             String username = req.params(":username");
             Map<String, Object> payload = gson.fromJson(req.body(), Map.class);
-            String unfollowUser = (String) payload.get("unfollow");
+            String toUnfollow = (String) payload.get("unfollow");
 
-            if (unfollowUser == null) {
+            if (toUnfollow == null) {
                 res.status(400);
                 return gson.toJson(Map.of("error", "Unfollow username required"));
             }
 
             Map<String, Object> user = Database.getUserByUsername(username);
-            Map<String, Object> userToUnfollow = Database.getUserByUsername(unfollowUser);
-
-            if (user == null || userToUnfollow == null) {
+            Map<String, Object> target = Database.getUserByUsername(toUnfollow);
+            if (user == null || target == null) {
                 res.status(404);
                 return gson.toJson(Map.of("error", "User not found"));
             }
 
-            Integer userId = (Integer) user.get("user_id");
-            Integer unfollowUserId = (Integer) userToUnfollow.get("user_id");
-
-            if (userId == null || unfollowUserId == null) {
-                res.status(404);
-                return gson.toJson(Map.of("error", "User ID not found"));
-            }
-
-            Database.unfollowUser(userId, unfollowUserId);
+            Database.unfollowUser((Integer) user.get("id"), (Integer) target.get("id"));
             res.status(204);
             return "";
         });
 
-        // Health check endpoint
-        get("/health", (req, res) -> gson.toJson(Map.of("status", "API running")));
-
-        // Debug endpoint to validate user existence
+        // Debug: fetch user
         get("/user/:username", (req, res) -> {
             String username = req.params(":username");
             Map<String, Object> user = Database.getUserByUsername(username);
@@ -263,46 +181,14 @@ public class SimulatorAPI {
             return gson.toJson(user);
         });
 
-        // Exception handling
+        // After filter to enforce JSON type
+        after((req, res) -> res.type("application/json"));
+
+        // Global exception handler
         exception(Exception.class, (e, req, res) -> {
+            log.error("Unhandled exception on {} {}", req.requestMethod(), req.pathInfo(), e);
             res.status(500);
             res.body(gson.toJson(Map.of("error", "Unexpected server error", "details", e.getMessage())));
         });
-
-        after((req, res) -> res.type("application/json"));
-    }
-
-    private static Map<String, Object> createModel(Request req) {
-        Map<String, Object> model = new HashMap<>();
-        Integer userId = req.session().attribute("user_id");
-        
-        if (userId != null) {
-            model.put("user", Database.getUserById(userId));
-        }
-        
-        List<String> flashes = req.session().attribute("flashes");
-        if (flashes != null && !flashes.isEmpty()) {
-            model.put("flashes", new ArrayList<>(flashes));
-            req.session().removeAttribute("flashes");
-        }
-        
-        return model;
-    }
-
-    private static void addFlash(Request req, String message) {
-        List<String> flashes = req.session().attribute("flashes");
-        if (flashes == null) {
-            flashes = new ArrayList<>();
-        }
-        flashes.add(message);
-        req.session().attribute("flashes", flashes);
-    }
-
-    private static Integer checkAuthenticated(Request req) {
-        Integer userId = req.session().attribute("user_id");
-        if (userId == null) {
-            halt(401, "Unauthorized");
-        }
-        return userId;
     }
 }
