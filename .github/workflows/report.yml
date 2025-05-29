@@ -6,6 +6,7 @@ permissions:
 on:
   push:
     branches: [ report ]
+
 jobs:
   build-docs:
     name: Build Documentation PDF
@@ -13,12 +14,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-  
+        with:
+          persist-credentials: true  # so we can push back
+          fetch-depth: 0             # fetch full history
+
       - name: Install Pandoc, XeLaTeX
         run: |
           sudo apt-get update
           sudo apt-get install -y pandoc texlive-xetex
-  
+
       - name: Build report PDF with Pandoc
         run: |
           pandoc report/report.md \
@@ -28,29 +32,19 @@ jobs:
             --pdf-engine=xelatex \
             --output report/ITU-MiniTwit-Report.pdf
 
+      - name: Commit & push PDF
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add report/ITU-MiniTwit-Report.pdf
+          git diff --quiet --staged || git commit -m "chore: update ITU-MiniTwit-Report.pdf [skip ci]"
+          git push
 
-      - name: Upload PDF as workflow artifact
-        uses: actions/upload-artifact@v4
+      # (Optional) create a draft release for distribution
+      - name: Create Draft Release & upload PDF
+        if: github.ref == 'refs/heads/report'
+        uses: softprops/action-gh-release@v1
         with:
-          name: ITU-MiniTwit-Report
-          path: report/ITU-MiniTwit-Report.pdf
-
-      - name: Create Draft Release
-        id: create_release
-        uses: actions/create-release@v1
-        with:
-          tag_name: report-${{ github.run_number }}
-          release_name: "ITU-MiniTwit Report"
-          draft: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload PDF to GitHub Release
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: report/ITU-MiniTwit-Report.pdf
-          asset_name: ITU-MiniTwit-Report.pdf
-          asset_content_type: application/pdf
+          files: report/ITU-MiniTwit-Report.pdf
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
