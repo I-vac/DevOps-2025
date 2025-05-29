@@ -1,0 +1,50 @@
+name: Build Report
+
+on:
+  push:
+    branches: [ report ]
+jobs:
+  build-docs:
+    name: Build Documentation PDF
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Pandoc, XeLaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-xetex
+
+      - name: Build report PDF with Pandoc
+        run: |
+          pandoc report.md \
+            --from gfm+yaml_metadata_block+pipe_tables \
+            --pdf-engine=xelatex \
+            --output ITU-MiniTwit-Report.pdf
+
+      - name: Upload PDF as workflow artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ITU-MiniTwit-Report
+          path: ITU-MiniTwit-Report.pdf
+
+      - name: Create Draft Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: report-${{ github.run_number }}
+          release_name: "ITU-MiniTwit Report"
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload PDF to GitHub Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ITU-MiniTwit-Report.pdf
+          asset_name: ITU-MiniTwit-Report.pdf
+          asset_content_type: application/pdf
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
