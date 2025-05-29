@@ -5,10 +5,10 @@ services:
     image: mysql:8.0
     container_name: minitwit-mysql
     environment:
-      MYSQL_ROOT_PASSWORD=devops123
-      MYSQL_DATABASE=minitwit_db
-      MYSQL_USER=minitwit
-      MYSQL_PASSWORD=minitwitpass
+      MYSQL_ROOT_PASSWORD: devops123
+      MYSQL_DATABASE: minitwit_db
+      MYSQL_USER: minitwit
+      MYSQL_PASSWORD: minitwitpass
     ports:
       - "3306:3306"
     volumes:
