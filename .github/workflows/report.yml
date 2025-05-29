@@ -24,6 +24,8 @@ jobs:
           pandoc report/report.md \
             --from=gfm+yaml_metadata_block+pipe_tables \
             --resource-path=report:report/diagrams/pdf \
+            -V geometry:a4paper \
+            -V geometry:margin=1in \
             --pdf-engine=xelatex \
             --output report/ITU-MiniTwit-Report.pdf
 
