@@ -9,17 +9,17 @@ RUN mvn clean package
 FROM eclipse-temurin:21-jdk
 WORKDIR /app
 
-# Expose application ports
+# Application ports
 EXPOSE 5000
-EXPOSE 9404  # JMX exporter port
-EXPOSE 9091  # Prometheus metrics port
+EXPOSE 9404
+EXPOSE 9091
 
 # JMX exporter
 COPY monitoring/jmx_prometheus_javaagent-0.18.0.jar /app/jmx_prometheus_javaagent-0.18.0.jar
-COPY monitoring/jmx_config.yml /app/jmx_config.yml
+COPY monitoring/jmx_config.yml            /app/jmx_config.yml
 
 # Application JAR
 COPY --from=build /app/target/minitwit-java-app.jar /app/app.jar
 
-# Default command: start the application with JMX agent
+# Launch the application with JMX exporter
 ENTRYPOINT ["java", "-javaagent:/app/jmx_prometheus_javaagent-0.18.0.jar=9404:/app/jmx_config.yml", "-jar", "/app/app.jar"]

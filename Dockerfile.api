@@ -11,8 +11,8 @@ WORKDIR /app
 
 # Expose application ports
 EXPOSE 5001
-EXPOSE 9404  # JMX exporter port
-EXPOSE 9091  # Prometheus metrics port
+EXPOSE 9404
+EXPOSE 9091
 
 # JMX exporter
 COPY monitoring/jmx_prometheus_javaagent-0.18.0.jar /app/jmx_prometheus_javaagent-0.18.0.jar
