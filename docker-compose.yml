@@ -93,3 +93,4 @@ volumes:
   minitwit-logs:
     external: true
     name: minitwit_minitwit-logs
+    
