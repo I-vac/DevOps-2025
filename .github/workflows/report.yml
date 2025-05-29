@@ -37,7 +37,7 @@ jobs:
             --columns=200 \
             -V geometry:margin=0.7in,landscape \
             --pdf-engine=xelatex \
-            --output report/MSc_group_n.pdf
+            --output report/ITU-MiniTwit-Report.pdf
 
       - name: Commit & push PDF
         run: |
