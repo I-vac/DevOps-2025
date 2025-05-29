@@ -18,6 +18,10 @@ jobs:
           persist-credentials: true  # allow pushes
           fetch-depth: 0             # get full history
 
+      - name: Remove old PDF
+        run: |
+          rm -f report/MSc_group_n.pdf
+
       - name: Install Pandoc & XeLaTeX
         run: |
           sudo apt-get update
