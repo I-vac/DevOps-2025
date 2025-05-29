@@ -1,6 +1,24 @@
 name: minitwit
 
 services:
+  mysql:
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+      args:
+        - MYSQL_DATABASE=${MYSQL_DATABASE}
+        - MYSQL_ALLOW_EMPTY_PASSWORD=${MYSQL_ALLOW_EMPTY_PASSWORD}
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_ALLOW_EMPTY_PASSWORD=${MYSQL_ALLOW_EMPTY_PASSWORD}
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p$MYSQL_ROOT_PASSWORD"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    restart: always
   # BLUE VERSION
   minitwit-blue:
     build:
@@ -12,11 +30,15 @@ services:
       - "9404:9404"
       - "9094:9091"
     volumes:
-      - minitwit-data:/data
+      # - minitwit-data:/data
       - minitwit-logs:/data/logs
     environment:
-      - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+      # - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+      - DATABASE_URL=jdbc:mysql://mysql:3306/minitwit_db?user=root
       - METRICS_PORT=9091
+    depends_on:
+      mysql:
+        condition: service_healthy
     restart: always
 
   # GREEN VERSION
@@ -33,8 +55,12 @@ services:
       - minitwit-data:/data
       - minitwit-logs:/data/logs
     environment:
-      - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+      # - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+      - DATABASE_URL=jdbc:mysql://mysql:3306/minitwit_db?user=root
       - METRICS_PORT=9091
+    depends_on:
+      mysql:
+        condition: service_healthy
     restart: always
 
   simulator-api:
@@ -49,8 +75,12 @@ services:
       - minitwit-data:/data
       - minitwit-logs:/data/logs
     environment:
-      - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+      # - DATABASE_URL=jdbc:sqlite:/data/minitwit.db
+      - DATABASE_URL=jdbc:mysql://mysql:3306/minitwit_db?user=root
       - "9092:9091"    # HTTP /metrics (host 9092 → container 9091)
+    depends_on:
+      mysql:
+        condition: service_healthy
     restart: always
 
   node-exporter-app:
