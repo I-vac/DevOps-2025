@@ -2,12 +2,10 @@ name: minitwit
 
 services:
   mysql:
-    build:
-      context: .
-      dockerfile: Dockerfile.db
-      args:
-        - MYSQL_DATABASE=${MYSQL_DATABASE}
-        - MYSQL_ALLOW_EMPTY_PASSWORD=${MYSQL_ALLOW_EMPTY_PASSWORD}
+    image: mysql:latest
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     environment:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_ALLOW_EMPTY_PASSWORD=${MYSQL_ALLOW_EMPTY_PASSWORD}
@@ -114,9 +112,12 @@ services:
       - default
 
 volumes:
+  mysql-data:
+    name: minitwit_mysql-data
+
   minitwit-data:
-    external: true
+
     name: minitwit_minitwit-data
   minitwit-logs:
-    external: true
+
     name: minitwit_minitwit-logs
