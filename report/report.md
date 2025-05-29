@@ -18,6 +18,7 @@ A **blue-green strategy** is enforced at the container layer: two identical back
 
 ### 1.1.1 Component Diagram (PlantUML)
 <!-- image -->
+![component diagram](img/comp.png)
 > **Figure 1.** Logical architecture, deployment footprint and cross-droplet flows.
 
 ## 1.2 Technology & Tool Dependencies
@@ -46,9 +47,11 @@ A **blue-green strategy** is enforced at the container layer: two identical back
 
 ### 1.3.1 End-user HTTP request
 <!-- image -->
+![end-user request](img/enduser.png)
 
 ### 1.3.2 Simulator request path
 <!-- image -->
+![simulator request](img/simu.png)
 
 ## 1.4 Current System State & Quality Metrics
 ??
@@ -69,8 +72,8 @@ A **blue-green strategy** is enforced at the container layer: two identical back
 # 2. Process Perspective
 
 ## 2.1 CI/CD Pipeline (GitHub Actions)
-
 <!-- image -->
+![ci/cd pipeline](img/cicd.png)
 
 **Tools Used:**
 
