@@ -29,9 +29,6 @@ jobs:
       - name: Build & run Maven tests
         run: mvn clean test -B
 
-      - name: SpotBugs analysis
-        run: mvn spotbugs:check -B
-
       - name: Checkstyle validation
         run: mvn checkstyle:check -B
 

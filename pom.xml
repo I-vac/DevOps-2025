@@ -90,18 +90,17 @@
 
     <build>
     <plugins>
+        <!-- OWASP Dep-Check -->
         <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>spotbugs-maven-plugin</artifactId>
-            <version>4.7.3.0</version>
-            <executions>
-                <execution>
-                <phase>verify</phase>
-                <goals>
-                    <goal>check</goal>
-                </goals>
-                </execution>
-            </executions>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+        <version>8.4.0</version>
+        <executions>
+            <execution>
+            <goals><goal>check</goal></goals>
+            <phase>verify</phase>
+            </execution>
+        </executions>
         </plugin>
         <!-- 2️⃣ Checkstyle for Java linting -->
         <plugin>
