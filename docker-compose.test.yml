@@ -1,0 +1,28 @@
+services:
+  minitwit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - test-mtw-data:/data
+      - test-mtw-logs:/data/logs
+    restart: always
+
+  simulator-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "5001:5001"
+    volumes:
+      - test-mtw-data:/data
+      - test-mtw-logs:/data/logs
+    restart: always
+
+volumes:
+  test-mtw-data:
+    driver: local
+  test-mtw-logs:
+    driver: local

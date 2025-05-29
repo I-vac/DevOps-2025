@@ -1,0 +1,165 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": "-- Grafana --",
+                "enable": true,
+                "hide": true,
+                "iconColor": "#fff",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "gnetId": null,
+    "graphTooltip": 0,
+    "id": null,
+    "iteration": 1623456789123,
+    "links": [],
+    "panels": [
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "percent"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "options": {},
+            "targets": [
+                {
+                    "expr": "(jvm_memory_bytes_used{area=\"heap\"} / jvm_memory_bytes_max{area=\"heap\"}) * 100",
+                    "legendFormat": "Heap %",
+                    "refId": "A"
+                }
+            ],
+            "title": "JVM Heap Usage",
+            "type": "timeseries"
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 0
+            },
+            "id": 2,
+            "options": {},
+            "targets": [
+                {
+                    "expr": "jvm_threads_current",
+                    "legendFormat": "Threads",
+                    "refId": "A"
+                }
+            ],
+            "title": "JVM Live Threads",
+            "type": "timeseries"
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "s"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 8
+            },
+            "id": 3,
+            "options": {},
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.95, sum(rate(db_query_duration_seconds_bucket[5m])) by (le))",
+                    "legendFormat": "95th percentile",
+                    "refId": "A"
+                }
+            ],
+            "title": "DB Query Latency (95th Percentile)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": "Prometheus",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 8
+            },
+            "id": 4,
+            "options": {
+                "showHeader": true
+            },
+            "targets": [
+                {
+                    "expr": "topk(5, histogram_quantile(0.95, sum by (uri, le)(rate(http_server_requests_seconds_bucket[5m]))))",
+                    "refId": "A"
+                }
+            ],
+            "title": "Top 5 Slowest API Endpoints (95th)",
+            "transformations": [],
+            "type": "table"
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "percent"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 6,
+                "w": 12,
+                "x": 0,
+                "y": 16
+            },
+            "id": 5,
+            "options": {},
+            "targets": [
+                {
+                    "expr": "(sum(rate(db_query_duration_seconds_sum[5m])) / sum(rate(http_server_requests_seconds_sum[5m]))) * 100",
+                    "legendFormat": "% time in DB",
+                    "refId": "A"
+                }
+            ],
+            "title": "DB vs. Total Request Time",
+            "type": "stat"
+        }
+    ],
+    "schemaVersion": 36,
+    "style": "dark",
+    "tags": [
+        "app",
+        "metrics"
+    ],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "App Metrics Dashboard",
+    "uid": "app-metrics",
+    "version": 1
+}

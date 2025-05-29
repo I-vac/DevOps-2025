@@ -1,3 +1,5 @@
+name: minitwit
+
 services:
   mysql:
     build:
@@ -9,6 +11,7 @@ services:
     environment:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_ALLOW_EMPTY_PASSWORD=${MYSQL_ALLOW_EMPTY_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     ports:
       - "${MYSQL_PORT}:3306"
     healthcheck:
@@ -18,14 +21,43 @@ services:
       retries: 10
     restart: always
 
-  minitwit:
+  # BLUE VERSION (MySQL-based)
+  minitwit-blue:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: minitwit-blue
     ports:
-      - "5000:5000"
+      - "5004:5000"
+      - "9404:9404"
+      - "9094:9091"
+    volumes:
+      - minitwit-data:/data
+      - minitwit-logs:/data/logs
     environment:
-      - DATABASE_URL=jdbc:mysql://mysql:3306/minitwit_db?user=root
+      - DATABASE_URL=jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?user=root&password=${MYSQL_ROOT_PASSWORD}
+      - METRICS_PORT=9091
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: always
+
+  # GREEN VERSION (MySQL-based)
+  minitwit-green:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: minitwit-green
+    ports:
+      - "5005:5000"
+      - "9406:9404"
+      - "9095:9091"
+    volumes:
+      - minitwit-data:/data
+      - minitwit-logs:/data/logs
+    environment:
+      - DATABASE_URL=jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?user=root&password=${MYSQL_ROOT_PASSWORD}
+      - METRICS_PORT=9091
     depends_on:
       mysql:
         condition: service_healthy
@@ -37,9 +69,54 @@ services:
       dockerfile: Dockerfile.api
     ports:
       - "5001:5001"
+      - "9405:9404"
+      - "9092:9091"
+    volumes:
+      - minitwit-data:/data
+      - minitwit-logs:/data/logs
     environment:
-      - DATABASE_URL=jdbc:mysql://mysql:3306/minitwit_db?user=root
+      - DATABASE_URL=jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?user=root&password=${MYSQL_ROOT_PASSWORD}
     depends_on:
       mysql:
         condition: service_healthy
     restart: always
+
+  node-exporter-app:
+    image: prom/node-exporter:latest
+    command: ["--path.rootfs=/host"]
+    volumes:
+      - /:/host:ro
+    ports:
+      - "9101:9100"
+    restart: unless-stopped
+
+  cadvisor-app:
+    image: gcr.io/cadvisor/cadvisor:latest
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.8.2
+    user: root
+    volumes:
+      - type: bind
+        source: ./filebeat.yml
+        target: /usr/share/filebeat/filebeat.yml
+        read_only: true
+      - minitwit-logs:/data/logs:ro
+    networks:
+      - default
+
+volumes:
+  minitwit-data:
+    external: true
+    name: minitwit_minitwit-data
+  minitwit-logs:
+    external: true
+    name: minitwit_minitwit-logs

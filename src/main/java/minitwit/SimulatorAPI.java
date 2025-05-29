@@ -8,8 +8,8 @@ import java.util.*;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class SimulatorAPI {
-    private static final Gson gson = new Gson();
     private static final int PER_PAGE = 30;
+    private static final Gson gson = new Gson();
 
     public static void main(String[] args) {
         // Configure SparkJava
@@ -32,7 +32,7 @@ public class SimulatorAPI {
             }
         });
 
-         get("/", (req, res) -> {
+        get("/", (req, res) -> {
             if (req.session().attribute("user_id") == null) {
                 res.redirect("/public");
                 return null;
@@ -48,6 +48,21 @@ public class SimulatorAPI {
             model.put("messages", Database.getPublicTimeline(PER_PAGE));
             return TemplateRenderer.render("timeline", model);
         });
+
+                // Health check
+        get("/health", (req, res) -> {
+            res.type("application/json");
+            return gson.toJson(Map.of("status", "ok"));
+        });
+
+        // right with your other routes:
+        get("/latest", (req, res) -> {
+            int latest = Database.getLatestCommandId();
+            res.type("application/json");
+            // e.g. { "latest_id": 42 }
+            return gson.toJson(Map.of("latest_id", latest));
+        });
+
 
         get("/login", (req, res) -> {
             Map<String, Object> model = createModel(req);

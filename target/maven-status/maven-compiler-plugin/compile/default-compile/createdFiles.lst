@@ -1,6 +1,6 @@
-minitwit/util/GravatarUtil.class
 minitwit/util/DateUtil.class
-minitwit/App.class
+minitwit/util/GravatarUtil.class
 minitwit/TemplateRenderer.class
 minitwit/Database.class
 minitwit/SimulatorAPI.class
+minitwit/App.class

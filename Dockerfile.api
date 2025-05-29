@@ -1,15 +1,24 @@
-# Build Stage
+# Build
 FROM jelastic/maven:3.9.5-openjdk-21 AS build
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 RUN mvn clean package
 
-# Runtime Stage
-FROM openjdk:21-slim
+# Runtime
+FROM eclipse-temurin:21-jdk
 WORKDIR /app
+RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
 
+# JMX exporter
+# copy the JMX exporter and config so the script can pick them up
+COPY monitoring/jmx_prometheus_javaagent-0.18.0.jar /app/jmx_prometheus_javaagent-0.18.0.jar
+COPY monitoring/jmx_config.yml            /app/jmx_config.yml
+EXPOSE 9404
+
+# App
 COPY --from=build /app/target/minitwit-java-simulator-api.jar app.jar
 
+# Ports
 EXPOSE 5001
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-javaagent:/app/jmx_prometheus_javaagent-0.18.0.jar=9404:/app/jmx_config.yml", "-jar", "app.jar"]
