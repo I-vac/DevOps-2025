@@ -33,7 +33,7 @@ jobs:
       - name: Build report PDF
         run: |
           pandoc report/report.md \
-            -f gfm+pipe_tables+grid_tables+table_captions+yaml_metadata_block \
+            --from=markdown+pipe_tables+grid_tables+yaml_metadata_block \
             --columns=200 \
             -V geometry:margin=0.7in,landscape \
             --pdf-engine=xelatex \
