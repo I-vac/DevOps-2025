@@ -30,13 +30,13 @@ jobs:
             --resource-path=report:report/diagrams/pdf \
             -V geometry:margin=0.7in,landscape \
             --pdf-engine=xelatex \
-            --output report/ITU-MiniTwit-Report.pdf
+            --output report/MSc_group_n.pdf
 
       - name: Commit & push PDF
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add report/ITU-MiniTwit-Report.pdf
+          git add report/MSc_group_n.pdf
           # only commit if the PDF actually changed
-          git diff --cached --exit-code || git commit -m "chore: update ITU-MiniTwit-Report.pdf [skip ci]"
+          git diff --cached --exit-code || git commit -m "chore: update MSc_group_n.pdf [skip ci]"
           git push
