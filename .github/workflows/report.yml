@@ -25,13 +25,16 @@ jobs:
       - name: Install Pandoc & XeLaTeX
         run: |
           sudo apt-get update
-          sudo apt-get install -y pandoc texlive-xetex
+          sudo apt-get install -y pandoc \
+            texlive-xetex \
+            texlive-latex-recommended \
+            texlive-fonts-recommended
 
       - name: Build report PDF
         run: |
           pandoc report/report.md \
-            --from=gfm+yaml_metadata_block+pipe_tables \
-            --resource-path=report:report/diagrams/pdf \
+            -f gfm+pipe_tables+grid_tables+table_captions+yaml_metadata_block \
+            --columns=200 \
             -V geometry:margin=0.7in,landscape \
             --pdf-engine=xelatex \
             --output report/MSc_group_n.pdf
@@ -42,5 +45,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add report/MSc_group_n.pdf
           # only commit if the PDF actually changed
-          git diff --cached --exit-code || git commit -m "chore: update MSc_group_n.pdf [skip ci]"
+          git diff --cached --exit-code || git commit -m "chore: update MSc_group_n.pdf"
           git push
