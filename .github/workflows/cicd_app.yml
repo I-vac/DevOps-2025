@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - main
-      - feat/availability
+      - feat/db-layer
 
 jobs:
   test-java:
@@ -95,6 +95,11 @@ jobs:
     name: Deploy to Droplet App
     runs-on: ubuntu-latest
     needs: [lint]
+    env:
+      MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+      MYSQL_DATABASE:      ${{ secrets.MYSQL_DATABASE }}
+      MYSQL_USER:          ${{ secrets.MYSQL_USER }}
+      MYSQL_PASSWORD:      ${{ secrets.MYSQL_PASSWORD }}
     # needs: [lint, build-and-test]
     steps:
       - uses: actions/checkout@v3
