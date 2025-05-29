@@ -30,7 +30,8 @@ jobs:
         run: mvn clean test -B
 
       - name: SpotBugs analysis
-        run: mvn spotbugs:check -B
+        run: mvn org.codehaus.mojo:spotbugs-maven-plugin:4.7.3.0:check -B
+
 
       - name: Checkstyle validation
         run: mvn checkstyle:check -B
