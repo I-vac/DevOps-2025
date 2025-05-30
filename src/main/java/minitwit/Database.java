@@ -24,7 +24,7 @@ public class Database {
             Class.forName("com.mysql.cj.jdbc.Driver");
             String dbPath = System.getenv("DATABASE_URL");
             if (dbPath == null) {
-                dbPath = "jdbc:mysql://localhost:3306/minitwit?serverTimezone=UTC";
+                dbPath = "jdbc:mysql://localhost:3306/minitwit_db?serverTimezone=UTC";
             }
             connection = DriverManager.getConnection(dbPath, "root", ""); 
         } catch (Exception e) {
