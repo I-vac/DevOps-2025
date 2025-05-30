@@ -60,7 +60,6 @@ The ITU-MiniTwit platform is **fully hosted on DigitalOcean** and embraces a con
 
 ## 1.4 Current System State & Quality Metrics
 In our CI/CD pipeline’s test-java stage we now invoke one automated static‐analysis checks immediately after compiling and running any unit tests:
-
 Checkstyle (mvn checkstyle:check) to validate code style against our project rules,
 By wiring each plugin into the POM (configuring Checkstyle’s rule set), any new rule violations or emerging vulnerabilities automatically fail the build—ensuring that only clean code, ever reaches deployment.
 
@@ -73,8 +72,6 @@ By wiring each plugin into the POM (configuring Checkstyle’s rule set), any ne
 5. **ELK** – Full-text debugging faster than Loki; Filebeat lightweight.
 6. **DigitalOcean** – Simpler pricing vs. AWS, gives floating IPs & VPC out-of-box.
 7. **GitHub Actions** – SaaS runners, secrets ephemeral, direct SSH deploy fits blue-green pattern.
-
----
 
 # 2. Process Perspective
 
