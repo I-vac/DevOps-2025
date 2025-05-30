@@ -5,14 +5,12 @@ services:
       MYSQL_DATABASE: "minitwit"
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_ROOT_PASSWORD: "root"
-    ports:
-      - "3306"   # app & simulator connect on the compose network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
       interval: 10s
       timeout: 5s
       retries: 5
-    # bind only the schema init; no data volume
+    # mount ONLY the schema init—no persistent data volume
     volumes:
       - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
 
