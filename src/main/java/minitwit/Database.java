@@ -46,7 +46,7 @@ public class Database {
             while (rs.next()) {
                 Map<String, Object> row = new HashMap<>();
                 for (int i = 1; i <= meta.getColumnCount(); i++) {
-                    row.put(meta.getColumnName(i), rs.getObject(i));
+                    row.put(meta.getColumnLabel(i), rs.getObject(i));
                 }
                 results.add(row);
             }
