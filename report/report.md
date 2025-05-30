@@ -1,6 +1,7 @@
 # ITU‑MiniTwit – DevOps Monitoring & CI/CD Report
 
-*MSc Group N* — Spring 2025 
+*Course Code:* KSDSESM1KU
+*MSc Group N* — Spring 2025
 Jesse Noah Lang - jnol@itu.dk
 Ivaylo Valeri Nikolov - ivni@itu.dk
 
