@@ -26,7 +26,7 @@ public class Database {
             if (dbPath == null) {
                 dbPath = "jdbc:mysql://localhost:3306/minitwit_db?serverTimezone=UTC";
             }
-            connection = DriverManager.getConnection(dbPath, "root", ""); 
+            connection = DriverManager.getConnection(dbPath); 
         } catch (Exception e) {
             e.printStackTrace();
         }
