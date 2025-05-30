@@ -98,10 +98,14 @@ public class Database {
 
     public static List<Map<String, Object>> getTimelineMessages(int userId, int limit) {
         return query("""
-            SELECT message.*, user.* 
-            FROM message, user
-            WHERE message.flagged = 0 
-              AND message.author_id = user.user_id 
+            SELECT 
+                message.text AS text,
+                message.pub_date AS pub_date,
+                user.username AS username,
+                user.email AS email
+            FROM message
+            JOIN user ON message.author_id = user.user_id
+            WHERE message.flagged = 0
               AND (
                 user.user_id = ? 
                 OR user.user_id IN (SELECT whom_id FROM follower WHERE who_id = ?)
@@ -110,6 +114,7 @@ public class Database {
             LIMIT ?""",
             userId, userId, limit);
     }
+    
 
     public static List<Map<String, Object>> getPublicTimeline(int limit) {
         return query("""
@@ -153,7 +158,11 @@ public class Database {
 
     public static List<Map<String, Object>> getUserTimeline(int userId, int limit) {
         return query("""
-            SELECT message.*, user.username, user.email 
+            SELECT 
+                message.text AS text,
+                message.pub_date AS pub_date,
+                user.username AS username,
+                user.email AS email
             FROM message 
             JOIN user ON message.author_id = user.user_id 
             WHERE message.author_id = ? 
