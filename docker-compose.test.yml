@@ -4,7 +4,7 @@ services:
     environment:
       MYSQL_DATABASE: "minitwit"
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_ROOT_PASSWORD: ""
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
       interval: 10s
@@ -21,7 +21,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      DATABASE_URL: "jdbc:mysql://mysql:3306/minitwit?user=root&password=root"
+      DATABASE_URL: "jdbc:mysql://mysql:3306/minitwit?user=root"
     depends_on:
       mysql:
         condition: service_healthy
@@ -33,7 +33,7 @@ services:
     ports:
       - "5001:5001"
     environment:
-      DATABASE_URL: "jdbc:mysql://mysql:3306/minitwit?user=root&password=root"
+      DATABASE_URL: "jdbc:mysql://mysql:3306/minitwit?user=root"
     depends_on:
       mysql:
         condition: service_healthy
