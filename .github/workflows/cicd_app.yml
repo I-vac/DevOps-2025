@@ -4,11 +4,10 @@ on:
   workflow_dispatch:
   push:
     branches:
-      # - separate-db
       - main
-      # - feat/availability
     paths:
-      - '!report/*'  # exclude report branch
+      - '!report/**'  # exclude report 
+
 
 jobs:
   test-java:
