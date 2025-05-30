@@ -33,11 +33,11 @@ jobs:
       - name: Build report PDF
         run: |
           pandoc report/report.md \
-            --from=markdown+pipe_tables+grid_tables+yaml_metadata_block \
+            --from=markdown+pipe_tables+grid_tables \
             --columns=200 \
             -V geometry:margin=0.7in,landscape \
             --pdf-engine=xelatex \
-            --output report/ITU-MiniTwit-Report.pdf
+            --output report/MSc_group_n.pdf
 
       - name: Commit & push PDF
         run: |
