@@ -37,6 +37,7 @@ public class App {
     // 3️⃣ DB query latency summary (DB instrumentation in Database class)
 
     public static void main(String[] args) throws Exception {
+        // Database setup
         Database.init();
         // Configure SparkJava
         log.info("Starting Minitwit on port 5000");
@@ -64,9 +65,6 @@ public class App {
                                 String.valueOf(res.status())).observe(secs);
         });
 
-
-        // Database setup
-        Database.init();
 
         // Configure Freemarker
         TemplateRenderer.configure();
