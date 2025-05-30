@@ -113,11 +113,15 @@ public class Database {
 
     public static List<Map<String, Object>> getPublicTimeline(int limit) {
         return query("""
-            SELECT message.*, user.* 
-            FROM message, user
-            WHERE message.flagged = 0 
-              AND message.author_id = user.user_id
-            ORDER BY message.pub_date DESC 
+            SELECT 
+                message.text AS text,
+                message.pub_date AS pub_date,
+                user.username AS username,
+                user.email AS email
+            FROM message
+            JOIN user ON message.author_id = user.user_id
+            WHERE message.flagged = 0
+            ORDER BY message.pub_date DESC
             LIMIT ?""",
             limit);
     }

@@ -114,10 +114,9 @@ services:
 volumes:
   mysql-data:
     name: minitwit_mysql-data
-
   minitwit-data:
-
+    external: true
     name: minitwit_minitwit-data
   minitwit-logs:
-
+    external: true
     name: minitwit_minitwit-logs
