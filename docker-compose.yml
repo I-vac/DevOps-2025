@@ -2,7 +2,7 @@ name: minitwit
 
 services:
   mysql:
-    image: mysql:8.0
+    image: mysql:latest
     volumes:
       - mysql-data:/var/lib/mysql
       - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
