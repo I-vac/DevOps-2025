@@ -4,8 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
-      - feat/availability
+      # - main
+      # - feat/availability
+      - prod-fixup
     paths:
       - 'monitoring/**'
       - 'grafana/**'

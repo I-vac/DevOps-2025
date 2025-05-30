@@ -5,7 +5,8 @@ permissions:
 
 on:
   push:
-    branches: [ main ]
+    workflow_dispatch:
+    branches: [ prod-fixup ]
     paths:
       - 'report/**'  # trigger on changes in report directory
 
