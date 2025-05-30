@@ -72,11 +72,18 @@ jobs:
             -f docker-compose.test.yml \
             up -d
 
-      - name: Wait for `/health`
+      - name: Wait for MySQL & App
         run: |
-          timeout 60 bash -c "until curl -sf http://localhost:5000/health | grep -q '\"status\":\"ok\"'; do
-            echo 'waiting…'; sleep 5
-          done"
+          timeout 60 bash -c '
+            until docker compose -f docker-compose.test.yml exec mysql \
+                    mysqladmin ping -h localhost -uroot -proot &>/dev/null; do
+              echo waiting for mysql…; sleep 2;
+            done
+            until curl -sf http://localhost:5000/health \
+                    | grep -q "\"status\":\"ok\""; do
+              echo waiting for app…; sleep 2;
+            done
+          '
 
       - name: Set up Python 3
         uses: actions/setup-python@v4
@@ -89,11 +96,8 @@ jobs:
       - name: Run API tests
         run: python3 tests/api_tests.py
 
-      - name: Tear down
-        run: |
-          docker compose \
-            -f docker-compose.test.yml \
-            down --volumes
+      - name: Tear down ephemeral stack
+        run: docker compose -f docker-compose.test.yml down --remove-orphans
 
 
   deploy:

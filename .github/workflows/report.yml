@@ -34,7 +34,7 @@ jobs:
             --from=gfm+yaml_metadata_block+pipe_tables \
             --columns=200 \
             --resource-path=report:report/diagrams/pdf \
-            -V geometry:margin=0.7in \
+            -V geometry:margin=0.7in,landscape \
             --pdf-engine=xelatex \
             --output report/MSc_group_n.pdf
 

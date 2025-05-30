@@ -1,14 +1,32 @@
 services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: "minitwit"
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_ROOT_PASSWORD: "root"
+    ports:
+      - "3306"   # app & simulator connect on the compose network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # bind only the schema init; no data volume
+    volumes:
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+
   minitwit:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
       - "5000:5000"
-    volumes:
-      - test-mtw-data:/data
-      - test-mtw-logs:/data/logs
-    restart: always
+    environment:
+      DATABASE_URL: "jdbc:mysql://mysql:3306/minitwit?user=root&password=root"
+    depends_on:
+      mysql:
+        condition: service_healthy
 
   simulator-api:
     build:
@@ -16,13 +34,8 @@ services:
       dockerfile: Dockerfile.api
     ports:
       - "5001:5001"
-    volumes:
-      - test-mtw-data:/data
-      - test-mtw-logs:/data/logs
-    restart: always
-
-volumes:
-  test-mtw-data:
-    driver: local
-  test-mtw-logs:
-    driver: local
+    environment:
+      DATABASE_URL: "jdbc:mysql://mysql:3306/minitwit?user=root&password=root"
+    depends_on:
+      mysql:
+        condition: service_healthy
