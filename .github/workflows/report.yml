@@ -6,6 +6,8 @@ permissions:
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'report/**'  # trigger on changes in report directory
 
 jobs:
   build-docs:
@@ -18,25 +20,31 @@ jobs:
           persist-credentials: true  # allow pushes
           fetch-depth: 0             # get full history
 
+      - name: Remove old PDF
+        run: |
+          rm -f report/MSc_group_n.pdf
+
       - name: Install Pandoc & XeLaTeX
         run: |
           sudo apt-get update
-          sudo apt-get install -y pandoc texlive-xetex
+          sudo apt-get install -y pandoc \
+            texlive-xetex
 
       - name: Build report PDF
         run: |
           pandoc report/report.md \
             --from=gfm+yaml_metadata_block+pipe_tables \
+            --columns=200 \
             --resource-path=report:report/diagrams/pdf \
             -V geometry:margin=0.7in,landscape \
             --pdf-engine=xelatex \
-            --output report/ITU-MiniTwit-Report.pdf
+            --output report/MSc_group_n.pdf
 
       - name: Commit & push PDF
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add report/ITU-MiniTwit-Report.pdf
+          git add report/MSc_group_n.pdf
           # only commit if the PDF actually changed
-          git diff --cached --exit-code || git commit -m "chore: update ITU-MiniTwit-Report.pdf [skip ci]"
+          git diff --cached --exit-code || git commit -m "chore: update MSc_group_n.pdf"
           git push
