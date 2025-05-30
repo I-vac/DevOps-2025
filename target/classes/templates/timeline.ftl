@@ -50,7 +50,11 @@
               ${message.username?html}
             </a>
           </strong>
-          ${message.text?html}
+            <#if message.text?has_content>
+            ${message.text?html}
+            <#else>
+              <em>[Message content missing]</em>
+            </#if>
           <small>&mdash; ${DateUtil.format(message.pub_date)}</small>
         </p>
       </li>

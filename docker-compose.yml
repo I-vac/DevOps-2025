@@ -30,7 +30,8 @@ services:
       - "9404:9404"
       - "9094:9091"
     volumes:
-      - minitwit-data:/data
+    #old sqlite data
+      # - minitwit-data:/data
       - minitwit-logs:/data/logs
     environment:
       - DATABASE_URL=jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?user=root&password=${MYSQL_ROOT_PASSWORD}
@@ -51,7 +52,8 @@ services:
       - "9406:9404"
       - "9095:9091"
     volumes:
-      - minitwit-data:/data
+      #old sqlite data
+      # - minitwit-data:/data
       - minitwit-logs:/data/logs
     environment:
       - DATABASE_URL=jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?user=root&password=${MYSQL_ROOT_PASSWORD}
@@ -70,7 +72,8 @@ services:
       - "9405:9404"
       - "9092:9091"
     volumes:
-      - minitwit-data:/data
+    #old sqlite data
+      # - minitwit-data:/data
       - minitwit-logs:/data/logs
     environment:
       - DATABASE_URL=jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?user=root&password=${MYSQL_ROOT_PASSWORD}
