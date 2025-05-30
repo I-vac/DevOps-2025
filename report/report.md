@@ -13,10 +13,13 @@ The ITU-MiniTwit platform is **fully hosted on DigitalOcean** and embraces a con
 
 | Droplet         | Public IP       | Role                    | Main containers                                                                                             |
 | --------------- | --------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------- |
-| **app-prod-01** | `161.35.71.145` | User-facing application | `nginx`, `minitwit-blue`, `minitwit-green`, `simulator-api`                                                 |
+| **app-prod-01** | `161.35.71.145` | User-facing application | `nginx`, `mysql` `minitwit-blue`, `minitwit-green`, `simulator-api`                                                 |
 | **mon-prod-01** | `68.183.210.76` | Observability stack     | `prometheus`, `grafana`, `elasticsearch`, `kibana`, `filebeat`, `alertmanager`, `node-exporter`, `cadvisor` |
 
-A **blue-green strategy** is enforced at the container layer: two identical backend containers run in parallel; a `/etc/nginx/conf.d/upstream.conf` symlink determines which revision receives live traffic.  State is isolated in a named Docker volume holding **SQLite** (WAL + shared-cache mode).  Structured JSON logs are mounted into `/var/lib/minitwit/logs`; `filebeat.yml` harvests and ships lines over the VPC to Elasticsearch.
+* **MySQL**: Uses `mysql:latest`, initializes schema via `schema.sql`, exposes port `${MYSQL_PORT}:3306`.
+* **App services**: All read `DATABASE_URL=jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?user=root&password=${MYSQL_ROOT_PASSWORD}` and only start after MySQL healthchecks.
+* **Blue-Green**: Two identical app containers; NGINX symlink flips upstream between them.
+* **Logging & Metrics**: JSON logs → Filebeat → Elasticsearch; `/metrics` and JMX → Prometheus → Grafana.
 
 ### 1.1.1 Component Diagram (PlantUML)
 <!-- image -->
@@ -35,7 +38,7 @@ A **blue-green strategy** is enforced at the container layer: two identical back
 | **Security libs**          | jBCrypt                                                 | Password hashing                                       |
 | **Logging**                | SLF4J + Logback                                         | Structured JSON logs                                                        |
 | **Metrics client**         | Prometheus Java client & JMX agent 0.18                 | JVM & HTTP metric exposition                          |
-| **Data**                   | SQLite (WAL)                                            | Zero‑ops DB, write concurrency                                              |
+| **Data**                   | MySQl                                            | ACID-compliant relational DB; schema init via SQL                                              |
 | **Containerisation**       | Docker + Docker Compose                                 | Environment parity, blue‑green pattern               |
 | **Observability platform** | Prometheus, Grafana, node‑exporter, cAdvisor            | Metrics scrape & dashboards                            |
 | **Log stack**              | Filebeat, Elasticsearch, Kibana                         | Structured log shipping & search                      |
@@ -65,7 +68,7 @@ By wiring each plugin into the POM (configuring Checkstyle’s rule set), any ne
 
 1. **Java 21 LTS** – Virtual threads reduce thread-per-req overhead, ensure future-proof support.
 2. **Docker/Compose** – Reproducible local dev & prod, blue-green implemented via container labels + NGINX.
-3. **SQLite** – Meets workload (< 500 req/s), zero-maintenance, mitigated via WAL + pool.
+3. **MySQL** - Needed robust concurrency, ACID guarantees and horizontal scaling beyond SQLite.
 4. **Prometheus/Grafana** – Open, query-flexible, no external latency.
 5. **ELK** – Full-text debugging faster than Loki; Filebeat lightweight.
 6. **DigitalOcean** – Simpler pricing vs. AWS, gives floating IPs & VPC out-of-box.
@@ -191,18 +194,15 @@ During this project, our two-person team confronted tight deadlines, infrastruct
 
 **Challenges:**
 
-* **Single-database simplicity**: We used only SQLite throughout—no full ORM or multi-DB layering—leading to manual SQL scattered in DAO-like methods and occasional repetitive code.
-* **Scope management**: As a team of two, balancing feature scope versus stability was tough; early attempts to over-engineer (e.g., planning microservices) had to be shelved.
+* **SQLite → MySQL migration**: Exported data via CSV, imported with `LOAD DATA INFILE`; adjusted SQL dialect (date functions, quoting), which broke early Grafana dashboards.
+* **Manual SQL duplication**: Helper methods in `Database.java` minimized repetition.
+* **Scope management**: Two-person team shelved microservices for MVP.
 
-**Solutions:**
+**Lessons:**
 
-* Embraced SQLite’s simplicity: centralised connection logic in a helper class (`Database.java`), documented common patterns, and reused SQL snippets in a shared utility to reduce duplication.
-* Adopted an MVP-first mindset: focused on core flows (register, post, follow) before any advanced refactoring or secondary features.
-
-**Lessons Learned:**
-
-1. **Keep it simple**: For small teams, minimal abstractions accelerate progress. SQLite served well at our scale and avoided operational overhead.
-2. **Prioritise core functionality**: Building a minimum viable pipeline prevented wasted effort on unneeded complexity.
+1. **Start simple**: SQLite accelerated prototyping.
+2. **Plan migrations**: Test data & query changes end-to-end to avoid silent failures.
+3. **Abstract common logic**: Central helpers ease future refactoring.
 
 ### 3.2 Operation
 
@@ -226,21 +226,22 @@ During this project, our two-person team confronted tight deadlines, infrastruct
 
 ### 3.3 Maintenance
 
-**Challenges:**
+* **Issue:** Merge bottlenecks in two-person team.
+  **Solution:** Daily stand-ups; clear task ownership.
+* **Issue:** Outdated docs.
+  **Solution:** Docs-as-code; CI-driven PDF builds; PlantUML alongside code.
+* **Lessons:** Automate docs; streamline onboarding with `make dev-up`.
 
 * **Workload balance**: With only two contributors, reviews and testing overlapped, causing merge bottlenecks.
 * **Documentation lag**: Keeping docs up-to-date with code changes was deprioritised under tight deadlines.
-
-**Lessons Learned:**
-
-1. **Regular communication**: Even small teams need structured check‑ins to avoid duplicated effort.
-2. **Docs-as-code**: Automating documentation reduces drift and ensures accuracy under time pressure.
+* **Regular communication**: Even small teams need structured check‑ins to avoid duplicated effort.
 
 ## 3.4 DevOps‑style Work Approach
 
 * **Survival development** – Tried to cope with the high workload, was hard to manage as only two people
 * **“You build it, you run it”**
 * **Automated everything** – One‑click (`gh workflow run deploy.yml`) recreates stack from scratch; mean time to recover (MTTR) < 5 min.
+* **test locally, test in deployment** and always be sure you know a quick way, to roll back to the previous version
 
 ### Key Takeaways
 
@@ -248,5 +249,4 @@ During this project, our two-person team confronted tight deadlines, infrastruct
 2. **Small, safe releases** – Blue‑green eliminated rollbacks pains (no DB migrations during cycle).
 3. **Shared responsibility** – Ops knowledge spread across team → no gatekeepers.
 
-# Appendix A
-![c4-container](img/c4-container.png)
+
