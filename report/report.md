@@ -249,3 +249,5 @@ During this project, our two-person team confronted tight deadlines, infrastruct
 2. **Small, safe releases** – Blue‑green eliminated rollbacks pains (no DB migrations during cycle).
 3. **Shared responsibility** – Ops knowledge spread across team → no gatekeepers.
 
+---
+Note: In order to provide a working application, we had to roll back to our sqlite version since the mysql version broke down last minute. The report still includes the MySQL setup, since that was the setup which is more scalable and faster.
