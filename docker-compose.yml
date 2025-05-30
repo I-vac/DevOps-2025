@@ -104,6 +104,7 @@ services:
 
   filebeat:
     image: docker.elastic.co/beats/filebeat:8.8.2
+    network_mode: host
     user: root
     volumes:
       - type: bind
