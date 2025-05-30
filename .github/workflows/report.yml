@@ -1,0 +1,42 @@
+name: Build Report
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-docs:
+    name: Build Documentation PDF
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true  # allow pushes
+          fetch-depth: 0             # get full history
+
+      - name: Install Pandoc & XeLaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-xetex
+
+      - name: Build report PDF
+        run: |
+          pandoc report/report.md \
+            --from=gfm+yaml_metadata_block+pipe_tables \
+            --resource-path=report:report/diagrams/pdf \
+            -V geometry:margin=0.7in,landscape \
+            --pdf-engine=xelatex \
+            --output report/ITU-MiniTwit-Report.pdf
+
+      - name: Commit & push PDF
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add report/ITU-MiniTwit-Report.pdf
+          # only commit if the PDF actually changed
+          git diff --cached --exit-code || git commit -m "chore: update ITU-MiniTwit-Report.pdf [skip ci]"
+          git push

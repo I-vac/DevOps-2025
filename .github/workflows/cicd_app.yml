@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
-      - feat/availability
+      - separate-db
+      # - feat/availability
 
 jobs:
   test-java:

@@ -1,22 +1,25 @@
-drop table if exists user;
-create table user (
-  user_id integer primary key autoincrement,
-  username string not null,
-  email string not null,
-  pw_hash string not null
+DROP TABLE IF EXISTS user;
+CREATE TABLE user (
+  user_id INT PRIMARY KEY AUTO_INCREMENT,
+  username VARCHAR(255) NOT NULL UNIQUE,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  pw_hash VARCHAR(255) NOT NULL
 );
 
-drop table if exists follower;
-create table follower (
-  who_id integer,
-  whom_id integer
+DROP TABLE IF EXISTS follower;
+CREATE TABLE follower (
+  who_id INT,
+  whom_id INT,
+  FOREIGN KEY (who_id) REFERENCES user(user_id) ON DELETE CASCADE,
+  FOREIGN KEY (whom_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
-drop table if exists message;
-create table message (
-  message_id integer primary key autoincrement,
-  author_id integer not null,
-  text string not null,
-  pub_date integer,
-  flagged integer
+DROP TABLE IF EXISTS message;
+CREATE TABLE message (
+  message_id INT PRIMARY KEY AUTO_INCREMENT,
+  author_id INT NOT NULL,
+  text TEXT NOT NULL,
+  pub_date INT,
+  flagged TINYINT(1) DEFAULT 0,
+  FOREIGN KEY (author_id) REFERENCES user(user_id) ON DELETE CASCADE
 );

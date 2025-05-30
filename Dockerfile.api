@@ -18,10 +18,7 @@ EXPOSE 9404
 
 # App
 COPY --from=build /app/target/minitwit-java-simulator-api.jar app.jar
-COPY src/main/resources/schema.sql /app/schema.sql
-COPY db_init.sh                   /app/db_init.sh
-RUN chmod +x /app/db_init.sh
 
 # Ports
 EXPOSE 5001
-CMD ["/app/db_init.sh"]
+CMD ["java", "-javaagent:/app/jmx_prometheus_javaagent-0.18.0.jar=9404:/app/jmx_config.yml", "-jar", "app.jar"]

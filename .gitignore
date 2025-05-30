@@ -5,3 +5,4 @@ Makefile
 flag_tool.c
 minitwit.py
 minitwit.pyc
+.vagrant/
