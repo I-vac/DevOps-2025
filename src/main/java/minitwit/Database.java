@@ -20,15 +20,25 @@ public class Database {
         .register();
 
     public static void init() {
+        // 1) Ensure the driver is loaded
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            String dbPath = System.getenv("DATABASE_URL");
-            if (dbPath == null) {
-                dbPath = "jdbc:mysql://localhost:3306/minitwit?serverTimezone=UTC";
-            }
-            connection = DriverManager.getConnection(dbPath, "root", ""); 
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("MySQL driver not found", e);
+        }
+    
+        // 2) Read the JDBC URL (which must include user & password)
+        String dbUrl = System.getenv("DATABASE_URL");
+        if (dbUrl == null) {
+            dbUrl = "jdbc:mysql://localhost:3306/minitwit?user=root&password=&serverTimezone=UTC";
+        }
+    
+        // 3) Open the connection *using* the URL parameters
+        try {
+            connection = DriverManager.getConnection(dbUrl);
+        } catch (SQLException e) {
+            // fail fast on startup rather than NPE later
+            throw new RuntimeException("Failed to connect to database: " + dbUrl, e);
         }
     }
 
