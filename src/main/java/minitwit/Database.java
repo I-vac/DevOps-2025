@@ -21,13 +21,12 @@ public class Database {
 
     public static void init() {
         try {
-            Class.forName("org.sqlite.JDBC");
+            Class.forName("com.mysql.cj.jdbc.Driver");
             String dbPath = System.getenv("DATABASE_URL");
             if (dbPath == null) {
-                dbPath = "jdbc:sqlite:minitwit.db";
+                dbPath = "jdbc:mysql://localhost:3306/minitwit?serverTimezone=UTC";
             }
-            connection = DriverManager.getConnection(dbPath);
-            connection.createStatement().execute("PRAGMA foreign_keys = ON");
+            connection = DriverManager.getConnection(dbPath, "root", ""); 
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -47,7 +46,7 @@ public class Database {
             while (rs.next()) {
                 Map<String, Object> row = new HashMap<>();
                 for (int i = 1; i <= meta.getColumnCount(); i++) {
-                    row.put(meta.getColumnName(i), rs.getObject(i));
+                    row.put(meta.getColumnLabel(i), rs.getObject(i));
                 }
                 results.add(row);
             }
@@ -99,10 +98,14 @@ public class Database {
 
     public static List<Map<String, Object>> getTimelineMessages(int userId, int limit) {
         return query("""
-            SELECT message.*, user.* 
-            FROM message, user
-            WHERE message.flagged = 0 
-              AND message.author_id = user.user_id 
+            SELECT 
+                message.text AS text,
+                message.pub_date AS pub_date,
+                user.username AS username,
+                user.email AS email
+            FROM message
+            JOIN user ON message.author_id = user.user_id
+            WHERE message.flagged = 0
               AND (
                 user.user_id = ? 
                 OR user.user_id IN (SELECT whom_id FROM follower WHERE who_id = ?)
@@ -111,14 +114,19 @@ public class Database {
             LIMIT ?""",
             userId, userId, limit);
     }
+    
 
     public static List<Map<String, Object>> getPublicTimeline(int limit) {
         return query("""
-            SELECT message.*, user.* 
-            FROM message, user
-            WHERE message.flagged = 0 
-              AND message.author_id = user.user_id
-            ORDER BY message.pub_date DESC 
+            SELECT 
+                message.text AS text,
+                message.pub_date AS pub_date,
+                user.username AS username,
+                user.email AS email
+            FROM message
+            JOIN user ON message.author_id = user.user_id
+            WHERE message.flagged = 0
+            ORDER BY message.pub_date DESC
             LIMIT ?""",
             limit);
     }
@@ -150,7 +158,11 @@ public class Database {
 
     public static List<Map<String, Object>> getUserTimeline(int userId, int limit) {
         return query("""
-            SELECT message.*, user.username, user.email 
+            SELECT 
+                message.text AS text,
+                message.pub_date AS pub_date,
+                user.username AS username,
+                user.email AS email
             FROM message 
             JOIN user ON message.author_id = user.user_id 
             WHERE message.author_id = ? 

@@ -8,7 +8,7 @@
     <#if user??>
       <a href="/">my timeline</a> |
       <a href="/public">public timeline</a> |
-      <a href="/logout">sign out [${user.username}]</a>
+      <a href="/logout">sign out [${user.username?html}]</a>
     <#else>
       <a href="/public">public timeline</a> |
       <a href="/register">sign up</a> |
@@ -18,7 +18,7 @@
   <#if flashes??>
     <ul class="flashes">
       <#list flashes as message>
-        <li>${message}</li>
+        <li>${message?html}</li>
       </#list>
     </ul>
   </#if>

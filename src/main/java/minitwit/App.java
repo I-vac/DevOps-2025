@@ -4,6 +4,8 @@ import static spark.Spark.*;
 import spark.Request;
 import spark.Response;
 import java.util.*;
+
+import org.eclipse.jetty.server.session.Session;
 import org.mindrot.jbcrypt.BCrypt;
 import com.google.gson.Gson;
 
@@ -78,6 +80,7 @@ public class App {
                 return null;
             }
             Map<String, Object> model = createModel(req);
+
             int userId = req.session().attribute("user_id");
             model.put("messages", Database.getTimelineMessages(userId, PER_PAGE));
             return TemplateRenderer.render("timeline", model);
@@ -107,11 +110,28 @@ public class App {
         });
 
         post("/login", (req, res) -> {
+            String formToken = req.queryParams("csrf_token");
+            String sessionToken = req.session().attribute("csrf_token");
+            if (formToken == null || !formToken.equals(sessionToken)){
+                halt(403, "Invalid CSRF Token");
+            }
+
             String username = req.queryParams("username");
             String password = req.queryParams("password");
             Map<String, Object> user = Database.getUserByUsername(username);
             if (user != null && BCrypt.checkpw(password, (String) user.get("pw_hash"))) {
-                req.session().attribute("user_id", user.get("user_id"));
+                spark.Session oldSession = req.session();
+                Map<String, Object> attrs = new HashMap<>();
+                for (String name: oldSession.attributes()){
+                    attrs.put(name, oldSession.attribute(name));
+                }
+                oldSession.invalidate();
+
+                spark.Session newSession = req.session(true);
+                for (Map.Entry<String, Object> entry : attrs.entrySet()){
+                    newSession.attribute(entry.getKey(), entry.getValue());
+                }
+                newSession.attribute("user_id", user.get("user_id"));
                 addFlash(req, "You were logged in");
                 res.redirect("/");
                 return null;
@@ -119,6 +139,7 @@ public class App {
             Map<String, Object> model = createModel(req);
             model.put("error", "Invalid username/password");
             model.put("username", username);
+            model.put("csrf_token", req.session().attribute("csrf_token"));
             return TemplateRenderer.render("login", model);
         });
 
@@ -128,6 +149,12 @@ public class App {
         });
 
         post("/register", (req, res) -> {
+            String formToken = req.queryParams("csrf_token");
+            String sessionToken = req.session().attribute("csrf_token");
+            if (formToken == null || !formToken.equals(sessionToken)){
+                halt(403, "Invalid CSRF Token");
+            }
+            
             Map<String, Object> model = createModel(req);
             String username = req.queryParams("username");
             String email = req.queryParams("email");
@@ -158,6 +185,7 @@ public class App {
         get("/logout", (req, res) -> {
             addFlash(req, "You were logged out");
             req.session().removeAttribute("user_id");
+            req.session().invalidate();
             res.redirect("/public");
             return null;
         });
@@ -178,22 +206,38 @@ public class App {
             return TemplateRenderer.render("timeline", model);
         });
 
-        get("/:username/follow", (req, res) -> {
+        post("/:username/follow", (req, res) -> {
             Integer current = checkAuthenticated(req);
+        
+            String formToken = req.queryParams("csrf_token");
+            String sessionToken = req.session().attribute("csrf_token");
+            if (formToken == null || !formToken.equals(sessionToken)) {
+                halt(403, "Invalid CSRF Token");
+            }
+        
             String username = req.params(":username");
             Map<String, Object> profile = Database.getUserByUsername(username);
             if (profile == null) halt(404, "User not found");
+        
             Database.followUser(current, (Integer) profile.get("user_id"));
             addFlash(req, "You are now following " + username);
             res.redirect("/" + username);
             return null;
         });
-
-        get("/:username/unfollow", (req, res) -> {
+        
+        post("/:username/unfollow", (req, res) -> {
             Integer current = checkAuthenticated(req);
+        
+            String formToken = req.queryParams("csrf_token");
+            String sessionToken = req.session().attribute("csrf_token");
+            if (formToken == null || !formToken.equals(sessionToken)) {
+                halt(403, "Invalid CSRF Token");
+            }
+        
             String username = req.params(":username");
             Map<String, Object> profile = Database.getUserByUsername(username);
             if (profile == null) halt(404, "User not found");
+        
             Database.unfollowUser(current, (Integer) profile.get("user_id"));
             addFlash(req, "You are no longer following " + username);
             res.redirect("/" + username);
@@ -202,6 +246,11 @@ public class App {
 
         post("/add_message", (req, res) -> {
             Integer user = checkAuthenticated(req);
+            String formToken = req.queryParams("csrf_token");
+            String sessionToken = req.session().attribute("csrf_token");
+            if(formToken == null || !formToken.equals(sessionToken)){
+                halt(403, "Invalid CSRF Token");
+            }
             String text = req.queryParams("text");
             if (text != null && !text.trim().isEmpty()) {
                 Database.createMessage(user, text.trim(), System.currentTimeMillis()/1000);
@@ -225,13 +274,22 @@ public class App {
         if (userId != null) {
             model.put("user", Database.getUserById(userId));
         }
-        
+
+        // Flash messages
         List<String> flashes = req.session().attribute("flashes");
         if (flashes != null && !flashes.isEmpty()) {
             model.put("flashes", new ArrayList<>(flashes));
             req.session().removeAttribute("flashes");
         }
-        
+
+        // CSRF token generation
+        String csrfToken = req.session().attribute("csrf_token");
+        if (csrfToken == null) {
+            csrfToken = UUID.randomUUID().toString();
+            req.session().attribute("csrf_token", csrfToken);
+        }
+        model.put("csrf_token", csrfToken);
+
         return model;
     }
 
